@@ -1,0 +1,129 @@
+<?php
+
+$costura_id = [vg_costura_id];
+
+$operacion = [vg_operacion];
+
+$vglinea_ = [vg_linea];
+
+$linea = 'L-' . $vglinea_;
+
+$usuario = [usr_login];
+
+$evento = $_GET['evento'] ?? 0;
+
+$tiempo_estimado = "1:50";
+
+$operario_avance_meta_dia = "20 / 270<br>10.7%";
+
+$linea_avance_meta_dia = "50 / 300<br>14.3%";
+
+$aray_uri = explode("/", $_SERVER['REQUEST_URI']);
+array_pop($aray_uri); // Eliminar el último elemento (nombre del archivo)
+array_pop($aray_uri);
+array_push($aray_uri, "");
+$uri = implode("/",$aray_uri);
+
+$api = $_SERVER['REQUEST_SCHEME']."://".$_SERVER['HTTP_HOST'].$uri;
+
+$exec_sql = "SELECT TIMESTAMPDIFF(SECOND, tiempo_inicio, NOW()) AS segundos 
+             FROM evento_normal 
+             WHERE evento_normal_id = ".$evento;
+
+sc_lookup(ds, $exec_sql);
+$segundos = 0; // Inicializa la variable en caso de que no se obtenga resultado
+if (isset({ds[0][0]})) {
+    $segundos = {ds[0][0]};
+}
+
+// CSS y JS de Bootstrap 5
+echo "<link rel='stylesheet' href='".sc_url_library("prj","bootstrap5","css/bootstrap.min.css")."' />";
+echo "<link rel='stylesheet' href='../_lib/css/css_ciclo.css' />";
+//echo "<link rel='stylesheet' href='".sc_url_library("prj", "mantenimiento_control_piso", "css/ciclo.css")."' />";
+// Nota: Para JS, usa el script tag en lugar de link
+echo "<script src='".sc_url_library("prj","bootstrap5","js/bootstrap.bundle.min.js")."'></script>";
+echo "<script src='../_lib/js/js_evento_ciclo.js?rand=".rand()."'></script>";
+//echo "<script href='".sc_url_library("prj", "mantenimiento_control_piso", "js/evento.js?rand=".rand())."' />";
+
+echo <<<HTML
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Control de Piso</title>
+    </head>
+    <body>
+        <input type="hidden" name="costura_id" id="costura_id" value="$costura_id">
+        <input type="hidden" name="evento_id" id="evento_id" value="$evento ">
+        <input type="hidden" name="api" id="api" value="$api">
+        <input type="hidden" name="operacion" id="operacion" value="$operacion">
+        <input type="hidden" name="linea" id="linea" value="$vglinea_">
+        <input type="hidden" name="usuario" id="usuario" value="$usuario">
+        <input type="hidden" name="segundos" id="segundos" value="$segundos">
+        <!-- Main Layout Structure -->
+        <div class="layout-container">
+            <!-- Header Information -->
+            <div class="top-controls-section">
+                <button class="control-btn back-btn" id="btnatras">
+                    Volver
+                </button>
+                <button class="control-btn exit-btn" id="btnsalir">
+                    Salir
+                </button>
+            </div>
+            <div class="header-section header-top">
+                <div>$operacion</div>
+                <div>$usuario</div>
+            </div>
+
+            <div class="header-section header-bottom">
+                <div>Tiempo Estimado: $tiempo_estimado</div>
+                <div>$linea</div>
+            </div>
+
+            <!-- Main Button Area -->
+            <div class="main-button-section bg-inicio" id="btns">
+                <button id="btnempezar" class="start-button">INICIO</button>
+            </div>
+
+            <div class="metrics-section">                
+                <!--div class="row">
+                    <label for="staticMotivo" class="col-sm col-form-label">Motivo</label>
+                    <div class="col-sm">
+                    <select class="form-select form-select-lg mb-3" aria-label=".form-select-lg example">
+                        <option selected>Motivo</option>
+                        <option value="1">One</option>
+                        <option value="2">Two</option>
+                        <option value="3">Three</option>
+                        </select>
+                    </div>
+                </div-->
+                <!-- Middle Column - Timer -->
+                <div class="metric-column">
+                    <div class="metric-display">
+                        <div class="timer-container">
+                            <span id="timerDisplay">00:00:00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer-section">
+                <div class="footer-item footer-light">
+                    <a class="footer-link" target="_parent" href="http://192.168.150.42:8092/scriptcase/app/eCorporativoM/form_anexo_cofaco/">
+                        <strong>Tiempo Acumulado</strong>
+                    </a>
+                </div>
+                <div class="footer-item footer-dark">
+                    <strong>Meta /dia : 35</strong>
+                </div>
+                <div class="footer-item footer-light">
+                    <strong>25/02/2025 04:15</strong>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
+HTML;
