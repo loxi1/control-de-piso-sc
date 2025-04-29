@@ -26,14 +26,20 @@ $uri = implode("/",$aray_uri);
 
 $api = $_SERVER['REQUEST_SCHEME']."://".$_SERVER['HTTP_HOST'].$uri;
 
-$exec_sql = "SELECT TIMESTAMPDIFF(SECOND, tiempo_inicio, NOW()) AS segundos 
+$exec_sql = "SELECT TIMESTAMPDIFF(SECOND, tiempo_inicio, NOW()) AS segundos, ciclo_id
              FROM evento_normal 
              WHERE evento_normal_id = ".$evento;
 
 sc_lookup(ds, $exec_sql);
 $segundos = 0; // Inicializa la variable en caso de que no se obtenga resultado
+$ciclo = 0; // Inicializa la variable en caso de que no se obtenga resultado
+
 if (isset({ds[0][0]})) {
     $segundos = {ds[0][0]};
+}
+
+if (isset({ds[0][1]})) {
+    $ciclo = {ds[0][1]};
 }
 
 // CSS y JS de Bootstrap 5
@@ -56,6 +62,7 @@ echo <<<HTML
     <body>
         <input type="hidden" name="costura_id" id="costura_id" value="$costura_id">
         <input type="hidden" name="evento_id" id="evento_id" value="$evento ">
+        <input type="hidden" name="ciclo_id" id="ciclo_id" value="$ciclo">
         <input type="hidden" name="api" id="api" value="$api">
         <input type="hidden" name="operacion" id="operacion" value="$operacion">
         <input type="hidden" name="linea" id="linea" value="$vglinea_">

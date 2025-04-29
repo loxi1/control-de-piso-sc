@@ -121,7 +121,10 @@ document.addEventListener('DOMContentLoaded', () => {
         button.addEventListener('click', async function () {
             const tipo = parseInt(this.getAttribute('tipo'));
             let ciclo = parseInt(document.getElementById("ciclo_id").value);
-            const costura = parseInt(document.getElementById("costura_id").value);
+            const costura = parseInt(document.getElementById("costura_id").value);   
+            
+            const motivo = parseInt(this.getAttribute('motivoid'));     
+            
             let estado = 1
             if (isNaN(tipo)) return;
 
@@ -131,7 +134,26 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (tipo === 1) {
-                await saveCicloEvento();
+                await saveCicloEvento({ costura, ciclo, motivo });
+            } else if (tipo === 2) {
+                Swal.fire({
+                    title: "¿Está seguro?",
+                    text: "Descartar operación Iniciada!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Si, eliminar!",
+                    cancelButtonText: "No, cancelar!"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: "Eliminado!",
+                            text: "Esta direccionando al soporte.",
+                            icon: "success"
+                        });
+                    }
+                });
             }
         });
     });
@@ -158,24 +180,18 @@ document.addEventListener('DOMContentLoaded', () => {
     
     
     // Función para guardar el evento ciclo
-    async function saveCicloEvento() {
+    async function saveCicloEvento(payload = {}) {
         const url = `${urlapi}save_evento_ciclo_normal/?nmgp_outra_jan=true`;
-        
-        const operacion = parseInt(document.getElementById("operacion").value);
-        const linea = parseInt(document.getElementById("linea").value);
-        const usuario = document.getElementById("usuario").value;
-        const ciclo = parseInt(document.getElementById("ciclo_id").value);
-        const costura = parseInt(document.getElementById("costura_id").value);        
 
         try {
-            const data = await postJSON(url, { costura, ciclo });
+            const data = await postJSON(url, payload);
 
             if (data.code === 200) {
                 const evento = parseInt(data.data.evento);
                 console.log("Evento guardado:", evento);
 
                 if (evento > 0) {
-                    const sendUrl = buildRedirectionUrl(evento, costura, operacion, linea, usuario);
+                    const sendUrl = buildRedirectionUrl(evento);
                     window.top.location.href = sendUrl;
                 }
             } else {
@@ -187,7 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Función para construir la URL de redirección
-    function buildRedirectionUrl(evento, costura, operacion, linea, usuario) {
+    function buildRedirectionUrl(evento) {
         return `${urlapi}blank_evento_ciclo_normal/?evento=${evento}`;
     }
 

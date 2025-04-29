@@ -26,9 +26,12 @@ $api = $_SERVER['REQUEST_SCHEME']."://".$_SERVER['HTTP_HOST'].$uri;
 // CSS y JS de Bootstrap 5
 echo "<link rel='stylesheet' href='".sc_url_library("prj","bootstrap5","css/bootstrap.min.css")."' />";
 echo "<link rel='stylesheet' href='../_lib/css/css_ciclo.css' />";
+echo "<link rel='stylesheet' href='../_lib/css/sweetalert2.min.css' />";
+
 // Nota: Para JS, usa el script tag en lugar de link
 echo "<script src='".sc_url_library("prj","bootstrap5","js/bootstrap.bundle.min.js")."'></script>";
 echo "<script src='../_lib/js/js_ciclo.js?rand=".rand()."'></script>";
+echo "<script src='../_lib/js/sweetalert2.all.min.js'></script>";
 //echo "<script src='".sc_url_library("prj", "mantenimiento_control_piso", "js/ciclo.js?rand=".rand())."' />";
 
 echo <<<HTML
@@ -118,18 +121,18 @@ echo <<<HTML
 
             <!-- Event Buttons Grid -->
             <div class="event-grid">
-                <button class="event-btn" tipo="1">Desmanche</button>
-                <button class="event-btn" tipo="1">Reproceso</button>
-                <button class="event-btn" tipo="2">Soporte</button>
-				<button class="event-btn" tipo="1">Servicios<br>Higienicos</button>
-                <button class="event-btn" tipo="1">Refrigerio</button>
-                <button class="event-btn" tipo="1">Agua</button>
-                <button class="event-btn" tipo="1">Pausa<br>Activa</button>
-				<button class="event-btn" tipo="1">Actividad</button>
-				<button class="event-btn" tipo="1">Falta<br>Carga</button>
-                <button class="event-btn" tipo="1">Topico</button>
-                <button class="event-btn" tipo="1">Salud</button>
-				<button class="event-btn" tipo="1">Seguridad</button>
+                <button class="event-btn" motivoid="1" tipo="1">Desmanche</button>
+                <button class="event-btn" motivoid="2" tipo="1">Reproceso</button>
+                <button class="event-btn" motivoid="3" tipo="2">Soporte</button>
+				<button class="event-btn" motivoid="4" tipo="1">Servicios<br>Higienicos</button>
+                <button class="event-btn" motivoid="5" tipo="1">Refrigerio</button>
+                <button class="event-btn" motivoid="6" tipo="1">Agua</button>
+                <button class="event-btn" motivoid="8" tipo="1">Pausa<br>Activa</button>
+				<button class="event-btn" motivoid="9" tipo="1">Actividad</button>
+				<button class="event-btn" motivoid="10" tipo="1">Falta<br>Carga</button>
+                <button class="event-btn" motivoid="11" tipo="1">Topico</button>
+                <button class="event-btn" motivoid="12" tipo="1">Salud</button>
+				<button class="event-btn" motivoid="13" tipo="1">Seguridad</button>
             </div>
 
             <!-- Footer -->

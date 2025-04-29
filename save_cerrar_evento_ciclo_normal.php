@@ -26,13 +26,21 @@ if (json_last_error() !== JSON_ERROR_NONE) {
 
 // ✅ Validar parámetros requeridos
 $evento = $param['evento'] ?? null;
+$ciclo = $param['ciclo'] ?? null;
 
 if (empty($evento)) {
     responder(422, 'Se requiere el parámetro "evento".');
 }
 
+if(empty($ciclo)) {
+    responder(422, 'Se requiere el parámetro "ciclo".');
+}
+
 // ✅ Si hay evento, solo actualiza
 $sql = "UPDATE evento_normal SET tiempo_fin = NOW(), tiempo_trascurrido = TIMEDIFF(NOW(), tiempo_inicio) WHERE evento_normal_id = $evento";
+sc_exec_sql($sql);
+
+$sql = "UPDATE ciclo SET tiempo_fin = NOW(), tiempo_trascurrido = TIMEDIFF(NOW(), tiempo_inicio) WHERE ciclo_id = $ciclo";
 sc_exec_sql($sql);
 
 responder(200, 'Evento Actualizado.', ['evento' => $evento]);

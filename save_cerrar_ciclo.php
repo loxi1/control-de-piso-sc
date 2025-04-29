@@ -37,14 +37,18 @@ if (empty($ciclo)) {
     responder(422, 'Se requiere el parámetro "ciclo".');
 }
 
-$tx_estado = "";
-// En caso se habilite un evento normal
-if (!empty($estado)) {
-    $tx_estado = "estado_id = 0, ";
+$set = [];
+
+if ($estado !== null) {
+    $set[] = "estado_id = 0";
 }
 
-// ✅ Si hay ciclo, solo actualiza
-$sql = "UPDATE ciclo SET ".$tx_estado."tiempo_fin = NOW(), tiempo_trascurrido = TIMEDIFF(NOW(), tiempo_inicio) WHERE ciclo_id = $ciclo";
-sc_exec_sql($sql);
+// Campos fijos
+$set[] = "tiempo_fin = NOW()";
+$set[] = "tiempo_trascurrido = TIMEDIFF(NOW(), tiempo_inicio)";
 
+// Armar sentencia SQL
+$txt_set = implode(", ", $set);
+$sql = "UPDATE ciclo SET $txt_set WHERE ciclo_id = $ciclo";
+sc_exec_sql($sql);
 responder(200, 'Ciclo insertado correctamente.', ['ciclo' => $ciclo]);

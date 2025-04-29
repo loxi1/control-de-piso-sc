@@ -1,26 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const urlapi = document.querySelector('input[name="api"]').value;    
-
-    function returnToMenu() {
-        try {
-            // Método preferido para ScriptCase
-            if (typeof parent.sc_redirect === 'function') {
-                parent.sc_redirect(`${urlapi}form_costura_test/index.php`);
-            }
-            // Método alternativo
-            else if (typeof window.top.location.href !== 'undefined') {
-                window.top.location.href = `${urlapi}form_costura_test/index.php`;
-            }
-            // Último recurso
-            else {
-                window.location.href = `${urlapi}form_costura_test/index.php`;
-            }
-        } catch (e) {
-            console.error("Error al redirigir:", e);
-            // Redirección simple como fallback
-            window.location.href = `${urlapi}form_costura_test/index.php`;
-        }
-    }   
+    const urlapi = document.querySelector('input[name="api"]').value; 
 
     // Variables para el temporizador
     let timer;
@@ -118,10 +97,11 @@ document.addEventListener('DOMContentLoaded', () => {
         parar();
 
         const evento = parseInt(document.getElementById("evento_id").value);
+        const ciclo = parseInt(document.getElementById("ciclo_id").value);
 
         // Solo guardar el evento si es un número válido
-        if (!isNaN(evento)) {
-            await saveEvento("save_cerrar_evento_ciclo_normal");
+        if (!isNaN(evento) && !isNaN(ciclo)) {
+            await saveEvento("save_cerrar_evento_ciclo_normal", { evento, ciclo });
         }
 
         // Redirigir si se proporciona una URL
@@ -131,12 +111,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Función para guardar el evento
-    async function saveEvento(metodo) {
-        const url = `${urlapi}${metodo}/?nmgp_outra_jan=true`;
-        const evento = parseInt(document.getElementById("evento_id").value);
-
+    async function saveEvento(metodo, payload = {}) {
+        const url = `${urlapi}${metodo}/?nmgp_outra_jan=true`;        
         try {
-            const data = await postJSON(url, { evento });
+            const data = await postJSON(url, payload);
             if (data.code === 200) {
                 evento = data.data.evento;
             } else {

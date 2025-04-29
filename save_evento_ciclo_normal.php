@@ -27,20 +27,38 @@ if (json_last_error() !== JSON_ERROR_NONE) {
 // ✅ Validar parámetros requeridos
 $costura = $param['costura'] ?? null;
 $ciclo_o = $param['ciclo'] ?? null;
+$motivo = !empty($param['motivo']) ? $param['motivo'] : null;
 
 if (empty($costura)) {
     responder(422, 'Se requiere el parámetro "costura".');
 }
 
-// ✅ Si no hay ciclo, insertar uno nuevo ciclo
-$ciclo = guardar_ciclo($costura, $ciclo_o);
+if ($ciclo_o === null) {
+    responder(500, 'Error al insertar el Ciclo.');
+}
+
+if (empty($motivo)) {
+    responder(422, 'Se requiere el parámetro "motivo".');
+}
+
+$insevent = [];
+$insevent["costua_id"] = (int)$costura;
+$insevent["predecesor_id"] = (int)$ciclo_o;
+
+// ✅ Insertar ciclo
+$ciclo = guardar_ciclo($insevent);
 
 if ($ciclo === null) {
     responder(500, 'Error al insertar el Ciclo.');
 }
 
-// ✅ Si no hay ciclo, insertar uno nuevo
-$insertedId = guardar_evento_ciclo_normal($ciclo);
+$insevent = [];
+
+$insevent["ciclo_id"] = (int)$ciclo;
+$insevent["motivo_id"] = (int)$motivo;
+
+// ✅ Insertar evento
+$insertedId = guardar_evento_ciclo_normal($insevent);
 
 if ($insertedId !== null) {
     responder(200, 'Evento insertado correctamente.', ['evento' => $insertedId]);
@@ -49,11 +67,19 @@ if ($insertedId !== null) {
 }
 
 // ✅ Función para guardar ciclo
-function guardar_ciclo($costura, $ciclo_o = NULL): ?int {
-    $colmn = (!empty($ciclo_o)) ? ", predecesor_id" : "";
-    $valor = (!empty($ciclo_o)) ? ", " . (int)$ciclo_o : "";
+function guardar_ciclo($insevent): ?int {
+    if (empty($insevent)) {
+        return null;
+    }
+
+    // Preparar columnas y valores
+    $columnas = implode(", ", array_keys($insevent));
+
+    $valores = implode(", ", array_map(function ($v) {
+        return is_numeric($v) ? $v : "'" . addslashes($v) . "'";
+    }, array_values($insevent)));
     
-    $sql_insert = "INSERT INTO ciclo (costua_id".$colmn.") VALUES (" . (int)$costura . $valor . ")";
+    $sql_insert = "INSERT INTO ciclo ($columnas) VALUES ($valores)";
     sc_exec_sql($sql_insert);
 
     $sql_id = "SELECT LAST_INSERT_ID()";
@@ -66,15 +92,28 @@ function guardar_ciclo($costura, $ciclo_o = NULL): ?int {
 }
 
 // ✅ Función para guardar evento ciclo normal
-function guardar_evento_ciclo_normal($ciclo): ?int {
-    $sql_insert = "INSERT INTO evento_normal (ciclo_id) VALUES (" . (int)$ciclo . ")";
+function guardar_evento_ciclo_normal($insevent): ?int {    
+    if (empty($insevent)) {
+        return null;
+    }
+
+    // Preparar columnas y valores
+    $columnas = implode(", ", array_keys($insevent));
+
+    $valores = implode(", ", array_map(function ($v) {
+        return is_numeric($v) ? $v : "'" . addslashes($v) . "'";
+    }, array_values($insevent)));
+
+    $sql_insert = "INSERT INTO evento_normal ($columnas) VALUES ($valores)";
     sc_exec_sql($sql_insert);
 
+    // Obtener el ID insertado
     $sql_id = "SELECT LAST_INSERT_ID()";
     sc_lookup(rs_id, $sql_id);
 
     if (isset({rs_id[0][0]})) {
-        return (int){rs_id[0][0]};
+        return (int) {rs_id[0][0]};
     }
+
     return null;
 }
