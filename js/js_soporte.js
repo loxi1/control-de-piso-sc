@@ -93,8 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
         saveSoporte('save_evento_soporte', payload);
         AlertaToast("Mecánico Iniciodo ok!");
 
-        window.top.location.href = `${urlapi}blank_evento_costura/`;
-        
+        window.top.location.href = `${urlapi}blank_evento_costura/`;        
     }
 
     function iniciarTemporizadorPrincipal() {

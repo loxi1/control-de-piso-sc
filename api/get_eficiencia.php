@@ -73,7 +73,7 @@ $eficiencia = "0.00 %";
 
 // Calcular eficiencia total de toda las operaciones
 if ($tciclos > 0) {
-    $eficiencia = $valorobtenido * $tciclos * $tciclos;
+    $eficiencia = ($tciclos / $valorobtenido) * $tciclos * 100;
     $eficiencia = number_format($eficiencia, 2, '.', '')." %";
 }
 
