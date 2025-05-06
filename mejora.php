@@ -7,9 +7,11 @@ $vglinea_ = [vg_linea];
 
 $linea = 'L-' . $vglinea_;
 
-$usuario = [usr_login];
+$usuario = [usr_login]; 
 
-$tiempo_estimado = "1:50";
+$usuario_nombre = [usr_name];
+
+$tiempo_estimado = "0.35"; //Expresado en minutos
 
 $operario_avance_meta_dia = "20 / 270<br>10.7%";
 
@@ -40,7 +42,7 @@ echo <<<HTML
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Control de Piso</title>
+        <title>Costura</title>
     </head>
 
     <body>
@@ -50,6 +52,8 @@ echo <<<HTML
         <input type="hidden" name="operacion" id="operacion" value="$operacion">
         <input type="hidden" name="linea" id="linea" value="$vglinea_">
         <input type="hidden" name="usuario" id="usuario" value="$usuario">
+        <input type="hidden" name="tiempo_estimado" id="tiempo_estimado" value="$tiempo_estimado">
+        <input type="hidden" name="nombre_usuario" id="nombre_usuario" value="$usuario_nombre">
         <!-- Main Layout Structure -->
         <div class="layout-container">
             <!-- Header Information -->
@@ -65,7 +69,7 @@ echo <<<HTML
 
             <div class="header-section header-top">
                 <div>$operacion</div>
-                <div>$usuario</div>
+                <div>$usuario_nombre</div>
             </div>
 
             <div class="header-section header-bottom">
@@ -82,12 +86,12 @@ echo <<<HTML
             <div class="metrics-section">
                 <!-- Left Column - Avance/Meta -->
                 <div class="metric-column">
-                    <div class="metric-title">Operario<br>Avance / Meta Día</div>
+                    <div class="metric-title">Operario<br>Eficiencia / Día</div>
                     <div class="svg-container">
                         <svg xmlns="http://www.w3.org/2000/svg" class="indicator-svg" xml:space="preserve" viewBox="0 0 73.935 73.935">
                             <path d="M52.279 73.935H21.656L0 52.279V21.655L21.655 0H52.28l21.655 21.655V52.28L52.279 73.935zm-29.381-3h28.139l19.898-19.897v-28.14L51.037 2.999H22.898L3 22.897v28.14l19.898 19.898z" />
                         </svg>
-                        <div class="indicator-value">$operario_avance_meta_dia</div>
+                        <div id="eficienciaxcolaborador" class="indicator-value">$operario_avance_meta_dia</div>
                     </div>
                 </div>
 
@@ -102,7 +106,7 @@ echo <<<HTML
                         <svg xmlns="" class="triangle-svg" viewBox="0 0 32 32">
 
                         </svg>
-                        <div class="reprocesos-value">6</div>
+                        <div class="reprocesos-value">0</div>
                         <div class="reprocesos-label">REPROCESOS</div>
                     </div>
                 </div>
@@ -138,15 +142,15 @@ echo <<<HTML
             <!-- Footer -->
             <div class="footer-section">
                 <div class="footer-item footer-light">
-                    <a class="footer-link" target="_parent" href="http://192.168.150.42:8092/scriptcase/app/eCorporativoM/form_anexo_cofaco/">
-                        <strong>Tiempo Acumulado</strong>
-                    </a>
+                    <div class="footer-link">
+                        <strong>T. Improductivo</strong>
+                    </div>
                 </div>
                 <div class="footer-item footer-dark">
-                    <strong>Meta /dia : 35</strong>
+                    <strong id="timp">0.0 hrs</strong>
                 </div>
                 <div class="footer-item footer-light">
-                    <strong>25/02/2025 04:15</strong>
+                    <strong id="pimp">0.0 %</strong>
                 </div>
             </div>
         </div>

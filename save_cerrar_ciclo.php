@@ -27,10 +27,15 @@ if (json_last_error() !== JSON_ERROR_NONE) {
 // ✅ Validar parámetros requeridos
 $costura = $param['costura'] ?? null;
 $ciclo   = (int)($param['ciclo'] ?? 0);
+$usuario   = ($param['usuario'] ?? 0);
 $estado = !empty($param['estado']) ? 1 : null;
 
 if (empty($costura)) {
     responder(422, 'Se requiere el parámetro "costura".');
+}
+
+if (empty($ciclo)) {
+    responder(422, 'Se requiere el parámetro "ciclo".');
 }
 
 if (empty($ciclo)) {
@@ -46,9 +51,11 @@ if ($estado !== null) {
 // Campos fijos
 $set[] = "tiempo_fin = NOW()";
 $set[] = "tiempo_trascurrido = TIMEDIFF(NOW(), tiempo_inicio)";
+$set[] = "usuario_modifica = '" . $usuario . "'";
 
 // Armar sentencia SQL
 $txt_set = implode(", ", $set);
 $sql = "UPDATE ciclo SET $txt_set WHERE ciclo_id = $ciclo";
 sc_exec_sql($sql);
+
 responder(200, 'Ciclo insertado correctamente.', ['ciclo' => $ciclo]);

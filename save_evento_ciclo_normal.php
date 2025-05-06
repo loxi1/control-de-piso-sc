@@ -28,6 +28,9 @@ if (json_last_error() !== JSON_ERROR_NONE) {
 $costura = $param['costura'] ?? null;
 $ciclo_o = $param['ciclo'] ?? null;
 $motivo = !empty($param['motivo']) ? $param['motivo'] : null;
+$usuario = $param['usuario'] ?? null;
+$nombre = $param['nombre'] ?? null;
+$tipo = $param['tipo'] ?? 0;
 
 if (empty($costura)) {
     responder(422, 'Se requiere el parámetro "costura".');
@@ -41,9 +44,19 @@ if (empty($motivo)) {
     responder(422, 'Se requiere el parámetro "motivo".');
 }
 
+if ($tipo === 0) {
+    responder(422, 'Se requiere el parámetro "tipo".');
+}
+
+if(empty($usuario)) {
+    responder(422, 'Se requiere el parámetro "usuario".');
+}
+
 $insevent = [];
 $insevent["costua_id"] = (int)$costura;
 $insevent["predecesor_id"] = (int)$ciclo_o;
+$insevent["usuario_registra"] = $usuario;
+$insevent["usuario_nombre"] = $nombre;
 
 // ✅ Insertar ciclo
 $ciclo = guardar_ciclo($insevent);
@@ -56,9 +69,11 @@ $insevent = [];
 
 $insevent["ciclo_id"] = (int)$ciclo;
 $insevent["motivo_id"] = (int)$motivo;
+$insevent["usuario_registra"] = $usuario;
+$insevent["usuario_nombre"] = $nombre;
 
 // ✅ Insertar evento
-$insertedId = guardar_evento_ciclo_normal($insevent);
+$insertedId = guardar_evento_ciclo_normal($insevent, $tipo);
 
 if ($insertedId !== null) {
     responder(200, 'Evento insertado correctamente.', ['evento' => $insertedId]);
@@ -92,10 +107,16 @@ function guardar_ciclo($insevent): ?int {
 }
 
 // ✅ Función para guardar evento ciclo normal
-function guardar_evento_ciclo_normal($insevent): ?int {    
+function guardar_evento_ciclo_normal($insevent, $tipo): ?int {    
     if (empty($insevent)) {
         return null;
     }
+
+    if($tipo === 0) {
+        return null;
+    }
+
+    $tabla = $tipo == 1 ? 'evento_normal' : 'evento_soporte';
 
     // Preparar columnas y valores
     $columnas = implode(", ", array_keys($insevent));
@@ -104,7 +125,7 @@ function guardar_evento_ciclo_normal($insevent): ?int {
         return is_numeric($v) ? $v : "'" . addslashes($v) . "'";
     }, array_values($insevent)));
 
-    $sql_insert = "INSERT INTO evento_normal ($columnas) VALUES ($valores)";
+    $sql_insert = "INSERT INTO $tabla ($columnas) VALUES ($valores)";
     sc_exec_sql($sql_insert);
 
     // Obtener el ID insertado

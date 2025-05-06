@@ -10,6 +10,8 @@ $linea = 'L-' . $vglinea_;
 
 $usuario = [usr_login];
 
+$usuario_nombre = [usr_name]; 
+
 $evento = $_GET['evento'] ?? 0;
 
 $tiempo_estimado = "1:50";
@@ -57,7 +59,7 @@ echo <<<HTML
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Control de Piso</title>
+        <title>Evento - Normal</title>
     </head>
     <body>
         <input type="hidden" name="costura_id" id="costura_id" value="$costura_id">
@@ -72,7 +74,7 @@ echo <<<HTML
         <div class="layout-container">
             <!-- Header Information -->
             <div class="top-controls-section">
-                <button class="control-btn back-btn" id="btnatras">
+                <button class="control-btn back-btn invisible" id="btnatras">
                     Volver
                 </button>
                 <button class="control-btn exit-btn" id="btnsalir">
@@ -81,7 +83,7 @@ echo <<<HTML
             </div>
             <div class="header-section header-top">
                 <div>$operacion</div>
-                <div>$usuario</div>
+                <div>$usuario_nombre</div>
             </div>
 
             <div class="header-section header-bottom">
@@ -90,22 +92,11 @@ echo <<<HTML
             </div>
 
             <!-- Main Button Area -->
-            <div class="main-button-section bg-inicio" id="btns">
+            <div class="main-button-section bg-inicio mb-5" id="btns">
                 <button id="btnempezar" class="start-button">INICIO</button>
             </div>
 
-            <div class="metrics-section">                
-                <!--div class="row">
-                    <label for="staticMotivo" class="col-sm col-form-label">Motivo</label>
-                    <div class="col-sm">
-                    <select class="form-select form-select-lg mb-3" aria-label=".form-select-lg example">
-                        <option selected>Motivo</option>
-                        <option value="1">One</option>
-                        <option value="2">Two</option>
-                        <option value="3">Three</option>
-                        </select>
-                    </div>
-                </div-->
+            <div class="metrics-section mb-5"> 
                 <!-- Middle Column - Timer -->
                 <div class="metric-column">
                     <div class="metric-display">
@@ -117,7 +108,7 @@ echo <<<HTML
             </div>
 
             <!-- Footer -->
-            <div class="footer-section">
+            <div class="footer-section mt-5">
                 <div class="footer-item footer-light">
                     <a class="footer-link" target="_parent" href="http://192.168.150.42:8092/scriptcase/app/eCorporativoM/form_anexo_cofaco/">
                         <strong>Tiempo Acumulado</strong>

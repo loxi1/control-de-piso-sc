@@ -7,11 +7,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnempezar = document.getElementById('btnempezar');
     const timerDisplay = document.getElementById('timerDisplay');
     const bgcontbtn = document.getElementById('btns');
+    const usuario = document.querySelector('input[name="usuario"]').value;
 
     const btnsalir = document.getElementById('btnsalir');
     const btnatras = document.getElementById('btnatras');
 
     let seconds = parseInt(document.getElementById('segundos').value) || 0;
+    const idmecanico = document.getElementById("mecanico_id");
 
     // Mostrar tiempo ya transcurrido al cargar
 
@@ -43,12 +45,11 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             parar();
         }
-        logoutScriptCase("blank_evento_normal")
+        logoutScriptCase("blank_evento_costura")
     });
 
     function iniciar() {
         isRunning = true;
-        seconds = segundos.value || 0; // Usar el valor de segundos del input
         timerDisplay.textContent = "00:00:00";
         timer = setInterval(updateTimer, 1000);
         btnempezar.textContent = 'FINALIZAR';
@@ -79,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Atras
     btnatras.addEventListener('click', function () {
-        handleExit('blank_evento_normal');
+        handleExit('blank_evento_costura');
     });
 
     // Función principal para manejar la salida o redirección
@@ -101,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Solo guardar el evento si es un número válido
         if (!isNaN(evento) && !isNaN(ciclo)) {
-            await saveEvento("save_cerrar_evento_ciclo_normal", { evento, ciclo });
+            await saveEvento("save_cerrar_evento_ciclo_normal", { evento, ciclo, usuario });
         }
 
         // Redirigir si se proporciona una URL
@@ -141,5 +142,5 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Error en la petición:", error);
             return { code: 500, msn: "Error en fetch", data: null };
         }
-    }    
+    }
 });

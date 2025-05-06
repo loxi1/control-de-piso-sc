@@ -71,13 +71,18 @@ html,body {
     cursor: pointer;
 }
 
+.border-top {
+    border-top: 2px solid #a19685;
+}
+.border-bottom {
+    border-bottom: 2px solid #a19685;
+}
+
 /* Metrics section */
 .metrics-section {
     display: flex;
     justify-content: space-between;
     padding: 10px;
-    border-top: 1px solid #e0e0e0;
-    border-bottom: 1px solid #e0e0e0;
 }
 
 .metric-column {
@@ -284,6 +289,8 @@ html,body {
     .event-btn {
         padding: 5px 2px;
         aspect-ratio: 1.5/1;
+        font-size: 1rem;
+        font-weight: 800;
     }
 
     .timer-container {
@@ -297,7 +304,7 @@ html,body {
 
     .control-btn {
         padding: 3px 10px;
-        font-size: 0.8rem;
+        font-size: 1.2rem;
     }
 
     .header-top,

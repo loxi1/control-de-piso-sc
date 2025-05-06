@@ -10,6 +10,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnatras = document.getElementById('btnatras');
     const timerDisplay = document.getElementById('timerDisplay');
     const bgcontbtn = document.getElementById('btns');
+    const usuario = document.querySelector('input[name="usuario"]').value;
+    const nombre = document.getElementById("nombre_usuario").value;
+    const costura = parseInt(document.getElementById("costura_id").value);
+    const tiempo = parseFloat(document.getElementById("tiempo_estimado").value) || 0;
 
     // Formatear tiempo
     function formatTime(totalSeconds) {
@@ -39,8 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
             iniciar();
         }
         let ciclo = parseInt(document.getElementById("ciclo_id").value);
-        const costura = parseInt(document.getElementById("costura_id").value);
-        saveCiclo("save_ciclo", { costura, ciclo });
+        
+        saveCiclo("save_ciclo", { costura, ciclo, usuario, nombre });
     });
 
     //Salir
@@ -72,9 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Solo guardar el ciclo si es un número válido
         if (!isNaN(ciclo)) {
             let ciclo = parseInt(document.getElementById("ciclo_id").value);
-            const costura = parseInt(document.getElementById("costura_id").value);
-            
-            await saveCiclo("save_cerrar_ciclo", { costura, ciclo });
+            await saveCiclo("save_cerrar_ciclo", { costura, ciclo, usuario });
         }
 
         // Redirigir si se proporciona una URL
@@ -102,13 +104,6 @@ document.addEventListener('DOMContentLoaded', () => {
         bgcontbtn.classList.remove('bg-finalizar');
     }
 
-    // Función para abrir formularios de ScriptCase
-    function openScriptCaseForm(formName) {
-        // Adapta esta URL a tu implementación en ScriptCase
-        window.location.href = 'app_scriptcase.php?form=' + encodeURIComponent(formName) +
-            '&operator=VIVIANA%20LOPEZ&line=LINEA%201&task=Preparar%203%20etqs%20DOBL+%20PO';
-    }
-
     // Limpiar al cerrar
     window.addEventListener('beforeunload', function () {
         if (isRunning) {
@@ -120,39 +115,35 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.event-btn').forEach(button => {
         button.addEventListener('click', async function () {
             const tipo = parseInt(this.getAttribute('tipo'));
-            let ciclo = parseInt(document.getElementById("ciclo_id").value);
-            const costura = parseInt(document.getElementById("costura_id").value);   
+            let ciclo = parseInt(document.getElementById("ciclo_id").value);            
             
-            const motivo = parseInt(this.getAttribute('motivoid'));     
+            const motivo = parseInt(this.getAttribute('motivoid'));  
             
             let estado = 1
             if (isNaN(tipo)) return;
 
             if (ciclo > 0 && !isNaN(ciclo)) {
                 // Solo guardar el ciclo si es un número válido
-                await saveCiclo("save_cerrar_ciclo",{ costura, ciclo, estado });
+                await saveCiclo("save_cerrar_ciclo",{ costura, ciclo, estado, tipo, usuario });
             }
 
-            if (tipo === 1) {
-                await saveCicloEvento({ costura, ciclo, motivo });
-            } else if (tipo === 2) {
+            const result = await Swal.fire({ // Espera el resultado de la confirmación
+                title: "¿Está seguro?",
+                text: "Descartar operación Iniciada!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Si, eliminar!",
+                cancelButtonText: "No, cancelar!"
+            });
+    
+            if (result.isConfirmed) {
+                await saveCicloEvento('save_evento_ciclo_normal', { costura, ciclo, motivo, nombre, usuario, tipo });
                 Swal.fire({
-                    title: "¿Está seguro?",
-                    text: "Descartar operación Iniciada!",
-                    icon: "warning",
-                    showCancelButton: true,
-                    confirmButtonColor: "#3085d6",
-                    cancelButtonColor: "#d33",
-                    confirmButtonText: "Si, eliminar!",
-                    cancelButtonText: "No, cancelar!"
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        Swal.fire({
-                            title: "Eliminado!",
-                            text: "Esta direccionando al soporte.",
-                            icon: "success"
-                        });
-                    }
+                    title: "Eliminado!",
+                    text: "Esta direccionando al soporte.",
+                    icon: "success"
                 });
             }
         });
@@ -176,12 +167,11 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error("Error al guardar ciclo:", error);
         }
-    }
-    
+    }    
     
     // Función para guardar el evento ciclo
-    async function saveCicloEvento(payload = {}) {
-        const url = `${urlapi}save_evento_ciclo_normal/?nmgp_outra_jan=true`;
+    async function saveCicloEvento(metodo, payload = {}) {
+        const url = `${urlapi}${metodo}/?nmgp_outra_jan=true`;
 
         try {
             const data = await postJSON(url, payload);
@@ -191,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log("Evento guardado:", evento);
 
                 if (evento > 0) {
-                    const sendUrl = buildRedirectionUrl(evento);
+                    const sendUrl = buildRedirectionUrl(evento, payload.tipo);
                     window.top.location.href = sendUrl;
                 }
             } else {
@@ -203,8 +193,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Función para construir la URL de redirección
-    function buildRedirectionUrl(evento) {
-        return `${urlapi}blank_evento_ciclo_normal/?evento=${evento}`;
+    function buildRedirectionUrl(evento, tipo) {
+        let pagina = "";
+        if (tipo === 1) {
+            pagina = "blank_evento_ciclo_normal";
+        } else {
+            pagina = "blank_soporte_ciclo";
+        }
+        return `${urlapi}${pagina}/?evento=${evento}`;
     }
 
     // Función para realizar la solicitud POST y manejar el JSON
@@ -222,5 +218,50 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Error en la petición:", error);
             return { code: 500, msn: "Error en fetch", data: null };
         }
-    }    
+    }
+
+    actualizarTiempos();
+
+    // Puedes repetirlo cada 5 minutos si deseas: setInterval(() => actualizarTiempos(usuarioid), 5 * 60 * 1000);
+    async function actualizarTiempos() {
+        const data = await getTiempoImproductivo('get_tiempo_improductivo',`usuario=${usuario}`);
+        if (data) {
+            // Actualizar los valores en el DOM
+            document.getElementById("timp").textContent = data.timp;
+            document.getElementById("pimp").textContent = data.pimp;
+        }
+    }
+    
+    // Ejecutar cada 3 minutos (180,000 ms)
+    setInterval(actualizarEficiencia, 3 * 60 * 1000);
+
+    // También puedes llamar una vez al cargar la página si es necesario
+    actualizarEficiencia();
+
+    async function actualizarEficiencia() {
+        const data = await getTiempoImproductivo('get_eficiencia',`usuario=${usuario}&tiempo=${tiempo}`);
+        if (data) {
+            // Actualizar los valores en el DOM
+            document.getElementById("eficienciaxcolaborador").textContent = data.eficiencia;
+        }
+    }
+
+    // Función para obtener datos de un metodo
+    async function getTiempoImproductivo(metodo, param) {
+        const url = `${urlapi}${metodo}/?${param}&nmgp_outra_jan=true`;
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (data.code === 200) {
+                return data.data;
+            } else {
+                console.error("Error en la respuesta:", data);
+                return null;
+            }
+        } catch (error) {
+            console.error("Error al obtener el tiempo improductivo:", error);
+            return null;
+        }
+    }
 });
