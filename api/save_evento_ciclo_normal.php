@@ -57,6 +57,8 @@ $insevent["costua_id"] = (int)$costura;
 $insevent["predecesor_id"] = (int)$ciclo_o;
 $insevent["usuario_registra"] = $usuario;
 $insevent["usuario_nombre"] = $nombre;
+$insevent["motivo_id"] = (int)$motivo;
+$insevent["motivo_tipo"] = (int)$tipo;
 
 // ✅ Insertar ciclo
 $ciclo = guardar_ciclo($insevent);
@@ -116,7 +118,7 @@ function guardar_evento_ciclo_normal($insevent, $tipo): ?int {
         return null;
     }
 
-    $tabla = $tipo == 1 ? 'evento_normal' : 'evento_soporte';
+    $tabla = $tipo == 2 ? 'evento_soporte' : 'evento_normal';
 
     // Preparar columnas y valores
     $columnas = implode(", ", array_keys($insevent));

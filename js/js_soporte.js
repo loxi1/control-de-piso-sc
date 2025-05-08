@@ -1,4 +1,19 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {    
+    //Obtener la url del API
+    const urlapi = document.querySelector('input[name="api"]').value
+    
+    //Funcion para activar y desactivar el preload
+    const loadingData = (estado) => {
+        const loading = document.querySelector("#preloader")
+        document.body.style.overflow = estado ? "hidden" : "auto"
+
+        if (estado)
+            loading.classList.remove("d-none")
+        else
+            loading.classList.add("d-none")
+        
+    }
+
     const Alerta = Swal.mixin({
         toast: true,
         position: "top-end",
@@ -6,79 +21,79 @@ document.addEventListener('DOMContentLoaded', () => {
         timer: 3000,
         timerProgressBar: true,
         didOpen: (toast) => {
-          toast.onmouseenter = Swal.stopTimer;
-          toast.onmouseleave = Swal.resumeTimer;
+          toast.onmouseenter = Swal.stopTimer
+          toast.onmouseleave = Swal.resumeTimer
         }
-    });
+    })
 
     // Variables para el primer temporizador (principal)
-    let timerPrincipal;
-    let isRunningPrincipal = false;
-    const btnEmpezarPrincipal = document.getElementById('btnempezar');
-    const timerDisplayPrincipal = document.getElementById('timerDisplay');
-    const bgContBtnPrincipal = document.getElementById('btns');
-    
-    const problemaid = document.getElementById('problemaid');
-    let secondsPrincipal = parseInt(document.getElementById('segundos').value) || 0;
-    const urlapi = document.querySelector('input[name="api"]').value;
-    const soporteid = document.querySelector('input[name="evento_soporte_id"]').value;
-    const cicloid = document.querySelector('input[name="ciclo_id"]').value;
-    const usuario = document.querySelector('input[name="usuario"]').value;
+    let timerPrincipal
+    let isRunningPrincipal = false
+    let secondsPrincipal = parseInt(document.getElementById('segundos').value) || 0
 
     // Variables para el segundo temporizador (mecánico)
-    let timerMecanico;
-    let isRunningMecanico = false;
-    const btnInicioMecanico = document.getElementById('btniniomecanico');
-    const timerDisplayMecanico = document.getElementById('timerDisplayMecanico');
-    let secondsMecanico = parseInt(document.getElementById('segatencion').value) || 0;
+    let timerMecanico
+    let isRunningMecanico = false
+    let secondsMecanico = parseInt(document.getElementById('segatencion').value, 10) || 0
+    let elMecanico = parseInt(document.getElementById("mecanico").value, 10) || 0 //Valor entero o 0
 
-    const elMecanico = document.getElementById("nombre_mecanico");
+    //Elementos
+    const btnEmpezarPrincipal = document.getElementById('btnempezar')
+    const timerDisplayMecanico = document.getElementById('timerDisplayMecanico')
+    const btnInicioMecanico = document.getElementById('btniniomecanico')
+    const timerDisplayPrincipal = document.getElementById('timerDisplay')
+    const bgContBtnPrincipal = document.getElementById('btns')    
+    const problemaid = document.getElementById('problemaid')
 
-    const problema = parseInt(document.getElementById('problema').value, 10);        
-    
-    const mecanicoNombre = document.getElementById("nombre_mecanico").textContent;
+    //Variables necesarias
+    parseInt(document.getElementById("ciclo_id").value, 10)
+    parseInt(document.getElementById("usuario").value, 10)
+    const soporteid = parseInt(document.getElementById("evento_soporte_id").value, 10)
+    const cicloid = document.querySelector('input[name="ciclo_id"]').value
+    const usuario = document.querySelector('input[name="usuario"]').value
+    const problema = parseInt(document.getElementById('problema').value, 10)
 
-    let mecanicoActual = "";
-
+    //Iniciar el temporalizador
     iniciarTemporizadorPrincipal()
-
+    
+    //En caso se haya llegado el mecánico
     if(secondsMecanico > 0) {
         iniciarTemporizadorMecanico()
-        btnInicioMecanico.style.display = 'none';
+        btnInicioMecanico.style.display = 'none'
     }
 
-    if(problema >0) {
-        problemaid.value = problema;
-    }
+    //En caso exista el idmecanico
+    if(elMecanico >0)
+        actualizarMecanico(elMecanico)
 
     // Formatear tiempo
     function formatTime(totalSeconds) {
-        const hours = Math.floor(totalSeconds / 3600);
-        const minutes = Math.floor((totalSeconds % 3600) / 60);
-        const seconds = totalSeconds % 60;
+        const hours = Math.floor(totalSeconds / 3600)
+        const minutes = Math.floor((totalSeconds % 3600) / 60)
+        const seconds = totalSeconds % 60
         return [
             hours.toString().padStart(2, '0'),
             minutes.toString().padStart(2, '0'),
             seconds.toString().padStart(2, '0')
-        ].join(':');
+        ].join(':')
     }
 
     // Actualizar temporizador principal
     function updateTimerPrincipal() {
-        secondsPrincipal++;
-        timerDisplayPrincipal.textContent = formatTime(secondsPrincipal);
+        secondsPrincipal++
+        timerDisplayPrincipal.textContent = formatTime(secondsPrincipal)
     }
 
     // Iniciar/Parar temporizador principal
     function toggleTimerPrincipal() {
         if (!isRunningPrincipal) {
-            iniciarTemporizadorPrincipal();
+            iniciarTemporizadorPrincipal()
         } else {
-            pararTemporizadorPrincipal();
+            pararTemporizadorPrincipal()
         }
 
         if (soporteid < 1 || cicloid < 1) {
-            return null;
+            return null
         }
 
         let tfatencion = 1
@@ -90,43 +105,45 @@ document.addEventListener('DOMContentLoaded', () => {
             usuario
         }
 
-        saveSoporte('save_evento_soporte', payload);
-        AlertaToast("Mecánico Iniciodo ok!");
-
-        window.top.location.href = `${urlapi}blank_evento_costura/`;        
+        saveSoporte('save_evento_soporte', payload)
+        AlertaToast("El mecánico inicio ok!")
+        loadingData(true)
+        window.top.location.href = `${urlapi}blank_evento_costura/`    
     }
 
+    //Iniciar crometro principal
     function iniciarTemporizadorPrincipal() {
-        isRunningPrincipal = true;
-        timerDisplayPrincipal.textContent = "00:00:00";
-        timerPrincipal = setInterval(updateTimerPrincipal, 1000);
-        btnEmpezarPrincipal.textContent = 'FINALIZAR';
-        bgContBtnPrincipal.classList.add('bg-finalizar');
-        bgContBtnPrincipal.classList.remove('bg-inicio');
+        isRunningPrincipal = true
+        timerDisplayPrincipal.textContent = "00:00:00"
+        timerPrincipal = setInterval(updateTimerPrincipal, 1000)
+        btnEmpezarPrincipal.textContent = 'FINALIZAR'
+        bgContBtnPrincipal.classList.add('bg-finalizar')
+        bgContBtnPrincipal.classList.remove('bg-inicio')
     }
 
+    //Iniciar crometro del mecánico
     function pararTemporizadorPrincipal() {
-        isRunningPrincipal = false;
-        clearInterval(timerPrincipal);
-        btnEmpezarPrincipal.textContent = 'INICIO';
-        bgContBtnPrincipal.classList.add('bg-inicio');
-        bgContBtnPrincipal.classList.remove('bg-finalizar');
-        btnEmpezarPrincipal.disabled = true;
+        isRunningPrincipal = false
+        clearInterval(timerPrincipal)
+        btnEmpezarPrincipal.textContent = 'INICIO'
+        bgContBtnPrincipal.classList.add('bg-inicio')
+        bgContBtnPrincipal.classList.remove('bg-finalizar')
+        btnEmpezarPrincipal.disabled = true
     }
 
     // Actualizar temporizador mecánico
     function updateTimerMecanico() {
-        secondsMecanico++;
-        timerDisplayMecanico.textContent = formatTime(secondsMecanico);
+        secondsMecanico++
+        timerDisplayMecanico.textContent = formatTime(secondsMecanico)
     }
 
     // Iniciar/Parar temporizador mecánico
     function toggleTimerMecanico() {
         if (!isRunningMecanico) {
-            iniciarTemporizadorMecanico();            
-            btnInicioMecanico.style.display = 'none'; // Ocultar el boton del mecanico
+            iniciarTemporizadorMecanico()         
+            btnInicioMecanico.style.display = 'none' // Ocultar el boton del mecanico
             if (soporteid < 1 || cicloid < 1) {
-                return null;
+                return null
             }
             let tiatencion = 1
 
@@ -136,57 +153,57 @@ document.addEventListener('DOMContentLoaded', () => {
                 usuario
             }
     
-            saveSoporte('save_evento_soporte', payload);
-            AlertaToast("Mecánico Iniciodo ok!");            
+            saveSoporte('save_evento_soporte', payload)
+            AlertaToast("Mecánico Iniciodo ok!")            
         } else {
-            pararTemporizadorMecanico();
+            pararTemporizadorMecanico()
         }
     }
 
+    //Iniciar cronometro del mecánico
     function iniciarTemporizadorMecanico() {
-        isRunningMecanico = true;
-        timerDisplayMecanico.textContent = "00:00:00";
-        timerMecanico = setInterval(updateTimerMecanico, 1000);
-        btnInicioMecanico.textContent = 'FINALIZAR'; // Opcional: cambiar texto del botón
-        btnInicioMecanico.classList.add('bg-finalizar');
-        btnInicioMecanico.classList.remove('bg-inicio');
+        isRunningMecanico = true
+        timerDisplayMecanico.textContent = "00:00:00"
+        timerMecanico = setInterval(updateTimerMecanico, 1000)
+        btnInicioMecanico.textContent = 'FINALIZAR' // Opcional: cambiar texto del botón
+        btnInicioMecanico.classList.add('bg-finalizar')
+        btnInicioMecanico.classList.remove('bg-inicio')
     }
 
+    //Parar cronometro del mecánico
     function pararTemporizadorMecanico() {
-        isRunningMecanico = false;
-        clearInterval(timerMecanico);
-        btnInicioMecanico.textContent = 'INICIO'; // Opcional: cambiar texto del botón
-        btnInicioMecanico.classList.add('bg-inicio');
-        btnInicioMecanico.classList.remove('bg-finalizar');
-        btnInicioMecanico.disabled = true;
+        isRunningMecanico = false
+        clearInterval(timerMecanico)
+        btnInicioMecanico.textContent = 'INICIO' // Opcional: cambiar texto del botón
+        btnInicioMecanico.classList.add('bg-inicio')
+        btnInicioMecanico.classList.remove('bg-finalizar')
+        btnInicioMecanico.disabled = true
     }
 
-    // Event listeners
-    btnEmpezarPrincipal.addEventListener('click', toggleTimerPrincipal);
+    // Event click
+    btnEmpezarPrincipal.addEventListener('click', toggleTimerPrincipal)
 
     // Asegúrate de que el botón con id "btniniomecanico" exista en tu HTML
     if (btnInicioMecanico) {
-        btnInicioMecanico.addEventListener('click', toggleTimerMecanico);
-
+        btnInicioMecanico.addEventListener('click', toggleTimerMecanico)
     }
 
     // Limpiar al cerrar (se limpian ambos intervalos si están activos)
     window.addEventListener('beforeunload', function () {
-        if (isRunningPrincipal) {
-            clearInterval(timerPrincipal);
-        }
-        if (isRunningMecanico) {
-            clearInterval(timerMecanico);
-        }
-    });
+        if (isRunningPrincipal)
+            clearInterval(timerPrincipal)
+        
+        if (isRunningMecanico)
+            clearInterval(timerMecanico)        
+    })
 
     //Evento change de problemaid
     problemaid.addEventListener('change', function () {
         //Mostra un # decimal
-        let problema = Math.max(parseInt(problemaid.value, 10) || 0, 0);
+        let problema = Math.max(parseInt(problemaid.value, 10) || 0, 0)
 
         if (soporteid < 1 || cicloid < 1) {
-            return null;
+            return null
         }
         let payload = {
             problema,
@@ -194,10 +211,11 @@ document.addEventListener('DOMContentLoaded', () => {
             usuario
         }
 
-        saveSoporte('save_evento_soporte', payload);
-        AlertaToast("Problema guardado ok!");     
-    });
+        saveSoporte('save_evento_soporte', payload)
+        AlertaToast("Problema guardado ok!")  
+    })
 
+    //Alerta de mensajes
     function AlertaToast(mensaje) {
         Alerta.fire({
             icon: "success",
@@ -208,77 +226,118 @@ document.addEventListener('DOMContentLoaded', () => {
             hideClass: {
                 popup: "animate__animated animate__fadeOutUp"
             }
-        });
-    }    
-
-    // Llamar cada 5 segundos
-    async function actualizarMecanico() {
-        const mecanico = await getMecanico(soporteid);
-        console.log("Mecanico: ", mecanico);
-        console.log("Mecanico Actual: ", mecanicoActual);
-        if (mecanico && mecanico !== mecanicoActual) {
-            mecanicoActual = mecanico;
-            if (elMecanico) {
-                elMecanico.textContent = mecanicoActual;
-            } else {
-                console.warn("Elemento #nombre_mecanico no encontrado en el DOM.");
-            }
-        }
+        })
     }
     
-    // Llamar inmediatamente y luego cada 5 segundos
-    actualizarMecanico();
-    setInterval(actualizarMecanico, 5000);
-    
-    // Función para obtener el nombre del mecánico desde el endpoint GET
-    async function getMecanico(id) {
-        const url = `${urlapi}get_mecanico/?id=${id}&nmgp_outra_jan=true`;
-        try {
-            const response = await fetch(url);
-            const data = await response.json();
+    //Mostra el tiempo improductivo
+    actualizarTiempos()
 
-            if (data.code === 200) {
-                return data.data.mecanico;
-            } else {
-                console.error("Error en la respuesta:", data);
-                return null;
-            }
-        } catch (error) {
-            console.error("Error al obtener el mecánico:", error);
-            return null;
+    // Puedes repetirlo cada 5 minutos si deseas: setInterval(() => actualizarTiempos(usuarioid), 5 * 60 * 1000)
+    async function actualizarTiempos() {
+        const data = await metodoGet('get_tiempo_improductivo',`usuario=${usuario}`)
+        if (data) {
+            // Actualizar los valores en el DOM
+            document.getElementById("timp").textContent = data.timp
+            document.getElementById("pimp").textContent = data.pimp
         }
     }
+
+    async function getMecanico() {
+        if (soporteid < 1) return null
+    
+        const data = await metodoGet('get_mecanico', `id=${soporteid}`, false)
+        const mecaid =  (!data || typeof data.mecanico === 'undefined' || data.mecanico === null) ? 0 : parseInt(data.mecanico)
+
+        if(mecaid > 0)
+            await actualizarMecanico(mecaid)
+    }
+    
+    async function actualizarMecanico(mecaid) {
+        const data = await metodoGet('get_colaborador', `id=${mecaid}`, false)
+        const nombre = (!data || typeof data.mecanico === 'undefined' || data.mecanico === null) ? "(Sin Asignar)" : data.mecanico
+        document.querySelector("#nombre_mecanico").textContent = nombre
+    }
+    
+    setInterval(getMecanico, 5000)
 
     // Función para guardar el evento
     async function saveSoporte(metodo, payload = {}) {
-        const url = `${urlapi}${metodo}/?nmgp_outra_jan=true`;        
+        const url = `${urlapi}${metodo}/?nmgp_outra_jan=true`
         try {
-            const data = await postJSON(url, payload);
+            const data = await postJSON(url, payload)
             if (data.code === 200) {
-                evento = data.data.soporte;
+                evento = data.data.soporte
             } else {
-                document.getElementById("ciclo_id").value = 0;
-                console.error("Error en la respuesta:", data);
+                document.getElementById("ciclo_id").value = 0
+                console.error("Error en la respuesta:", data)
             }
         } catch (error) {
-            console.error("Error al guardar evento:", error);
+            console.error("Error al guardar evento:", error)
         }
     }
 
     // Función para realizar la solicitud POST y manejar el JSON
     async function postJSON(url, data) {
         try {
+            loadingData(true)
             const response = await fetch(url, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify(data)
-            });
-            return await response.json();
+            })
+            return await response.json()
         } catch (error) {
-            console.error("Error en la petición:", error);
-            return { code: 500, msn: "Error en fetch", data: null };
+            return { code: 500, msn: "Error en fetch", data: null }
+        } finally {
+            loadingData(false)
         }
     }
-});
+    
+    // Función para cargar el combo de problemas
+    getProblema()
+    async function getProblema() {
+        const data = await metodoGet('get_problema', ``)
+        const select = document.getElementById("problemaid")
+        const selectedProblema = parseInt(document.getElementById("problema").value, 10)
+
+        if (data && Array.isArray(data)) {         
+            // Limpiar el select por si ya tiene opciones
+            select.innerHTML = ''
+
+            // Agregar opción por defecto
+            const defaultOption = document.createElement("option")
+            defaultOption.value = "0"
+            defaultOption.textContent = "--SELECCIONAR--"
+            select.appendChild(defaultOption)
+
+            // Agregar las opciones dinámicamente
+            data.forEach(item => {
+                const option = document.createElement("option")
+                option.value = item.id
+                option.textContent = item.motivo
+                if (item.id === selectedProblema) {
+                    option.selected = true
+                }
+                select.appendChild(option)
+            })
+        }
+    }
+
+    // Función para obtener datos de un metodo
+    async function metodoGet(metodo, param, mostrarLoader = true) {
+        const url = `${urlapi}${metodo}/?${param}`
+        try {
+            if (mostrarLoader) loadingData(true)
+            const response = await fetch(url)
+            const data = await response.json()
+
+            return data.code === 200 ? data.data : null
+        } catch (error) {
+            return null
+        } finally {
+            if (mostrarLoader) loadingData(false)
+        }
+    }
+})

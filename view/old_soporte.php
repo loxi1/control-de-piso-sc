@@ -1,5 +1,4 @@
 <?php
-
 $costura_id = [vg_costura_id];
 
 $operacion = [vg_operacion];
@@ -53,6 +52,7 @@ $ciclo = 0; // Inicializa la variable en caso de que no se obtenga resultado
 $segatencion = 0; // Inicializa la variable en caso de que no se obtenga resultado
 $problema = 0; // Inicializa la variable en caso de que no se obtenga resultado
 $mecanico = 0; // Inicializa la variable en caso de que no se obtenga resultado
+
 if(!empty({ds})) {
     if (!empty({ds[0][0]})) {
         $segundos = {ds[0][0]};
@@ -76,8 +76,48 @@ if(!empty({ds})) {
 }
 $base_url = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];
 $script_dir = dirname(dirname($_SERVER['REQUEST_URI'])); // sube 2 niveles
-$api_url = rtrim($base_url . $script_dir, '/');
+$api_url = rtrim($base_url . $script_dir, '/') . '/get_motivo/';
+
+// ✅ Ejecutar llamada al API interna
+$ch = curl_init($api_url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_TIMEOUT, 2); // 2 segundos máximo
+$response_raw = curl_exec($ch);
+$curl_errno = curl_errno($ch);
+curl_close($ch);
+
+$optproblema = "<option value='0' selected=''> --SELECCIONAR-- </option>";
+if(!empty($response_raw)) {
+    $response = json_decode($response_raw, true);
+    if (is_array($response) && ($response['code'] ?? 0) === 200) {
+        foreach ($response['data'] as $row) {
+            $selected = ($problema == $row['id']) ? "selected" : "";
+            $optproblema .= "<option value='".$row['id']."' $selected>".utf8_encode($row['motivo'])."</option>";
+        }
+    } else {
+        $optproblema .= "<option value='0'>No se encontraron problemas.</option>";
+    }
+} else {
+    $optproblema .= "<option value='0'>Error al obtener problemas.</option>";
+}
+
+$api_url = rtrim($base_url . $script_dir, '/') . '/get_mecanico/?id=' . intval($soporte);
+
+// ✅ Ejecutar llamada al API interna
+$ch = curl_init($api_url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_TIMEOUT, 2); // 2 segundos máximo
+$response_raw = curl_exec($ch);
+$curl_errno = curl_errno($ch);
+curl_close($ch);
+
 $txt_mecanico = "(Sin asignar)";
+if(!empty($response_raw['data'][0])) {
+    $response = json_decode($response_raw, true);
+    if (is_array($response) && ($response['code'] ?? 0) === 200) {
+        $txt_mecanico = $response['data']['mecanico'] ?? null;
+    }
+}
 
 echo <<<HTML
 <!DOCTYPE html>
@@ -88,13 +128,6 @@ echo <<<HTML
         <title>Evento - Soporte</title>
     </head>
     <body>
-        <!-- Spinner -->
-        <div id="preloader" class="d-flex d-none justify-content-center align-items-center position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50" style="z-index: 1050; opacity:0.8;">
-            <div class="spinner-border text-light" role="status">
-                <span class="visually-hidden">Cargando...</span>
-            </div>
-        </div>
-        
         <input type="hidden" name="costura_id" id="costura_id" value="$costura_id">
         <input type="hidden" name="evento_soporte_id" id="evento_soporte_id" value="$soporte ">
         <input type="hidden" name="ciclo_id" id="ciclo_id" value="$ciclo">
@@ -137,7 +170,7 @@ echo <<<HTML
                 <div class="row mb-3 mt-2">
                     <div class="input-group">
                         <span class="input-group-text" id="basic-addon1">Problema</span>
-                        <select id="problemaid" class="form-select form-select-lg" aria-label=".form-select-lg example"><option value='0' selected=''> --SELECCIONAR-- </option></select>
+                        <select id="problemaid" class="form-select form-select-lg" aria-label=".form-select-lg example">$optproblema</select>
                     </div>
                 </div>
             </div>
@@ -189,10 +222,10 @@ echo <<<HTML
                     </a>
                 </div>
                 <div class="footer-item footer-dark">
-                    <strong id="timp">0.0 hrs</strong>
+                    <strong>Meta /dia : 35</strong>
                 </div>
                 <div class="footer-item footer-light">
-                    <strong id="pimp">0.0 %</strong>
+                    <strong>25/02/2025 04:15</strong>
                 </div>
             </div>
         </div>

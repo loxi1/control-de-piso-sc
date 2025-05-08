@@ -14,7 +14,7 @@ $usuario_nombre = [usr_name];
 
 $evento = $_GET['evento'] ?? 0;
 
-$tiempo_estimado = "1:50";
+$tiempo_estimado = [vg_tiempo_estimado]; //Expresado en minutos
 
 $operario_avance_meta_dia = "20 / 270<br>10.7%";
 
@@ -62,6 +62,12 @@ echo <<<HTML
         <title>Evento - Normal</title>
     </head>
     <body>
+        <!-- Spinner -->
+        <div id="preloader" class="d-flex d-none justify-content-center align-items-center position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50" style="z-index: 1050; opacity:0.8;">
+            <div class="spinner-border text-light" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+        </div>
         <input type="hidden" name="costura_id" id="costura_id" value="$costura_id">
         <input type="hidden" name="evento_id" id="evento_id" value="$evento ">
         <input type="hidden" name="ciclo_id" id="ciclo_id" value="$ciclo">
@@ -77,7 +83,7 @@ echo <<<HTML
                 <button class="control-btn back-btn invisible" id="btnatras">
                     Volver
                 </button>
-                <button class="control-btn exit-btn" id="btnsalir">
+                <button class="control-btn exit-btn invisible" id="btnsalir">
                     Salir
                 </button>
             </div>
@@ -115,10 +121,10 @@ echo <<<HTML
                     </a>
                 </div>
                 <div class="footer-item footer-dark">
-                    <strong>Meta /dia : 35</strong>
+                    <strong id="timp">0.0 hrs</strong>
                 </div>
                 <div class="footer-item footer-light">
-                    <strong>25/02/2025 04:15</strong>
+                    <strong id="pimp">0.0 %</strong>
                 </div>
             </div>
         </div>

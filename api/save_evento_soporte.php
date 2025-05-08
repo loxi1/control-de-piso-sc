@@ -45,7 +45,7 @@ if(!empty($problema)) {
 
 if(!empty($tiatencion)) {
     $updsoporte["tiempo_inicio_atencion"] = "NOW()";
-    $updsoporte["tiempo_inicio_atencion_mec"] = "NOW()";
+    $updsoporte["  "] = "NOW()";
 }
 
 if(!empty($usuario)) {

@@ -11,9 +11,7 @@ $usuario = [usr_login];
 
 $usuario_nombre = [usr_name];
 
-$tiempo_estimado = "0.35"; //Expresado en minutos
-
-$operario_avance_meta_dia = "20 / 270<br>10.7%";
+$tiempo_estimado = [vg_tiempo_estimado]; //Expresado en minutos
 
 $linea_avance_meta_dia = "50 / 300<br>14.3%";
 
@@ -46,6 +44,13 @@ echo <<<HTML
     </head>
 
     <body>
+        <!-- Spinner -->
+        <div id="preloader" class="d-flex d-none justify-content-center align-items-center position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50" style="z-index: 1050; opacity:0.8;">
+            <div class="spinner-border text-light" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+        </div>
+
 		<input type="hidden" name="costura_id" id="costura_id" value="$costura_id">
         <input type="hidden" name="ciclo_id" id="ciclo_id" value="0">
         <input type="hidden" name="api" id="api" value="$api">
@@ -54,6 +59,7 @@ echo <<<HTML
         <input type="hidden" name="usuario" id="usuario" value="$usuario">
         <input type="hidden" name="tiempo_estimado" id="tiempo_estimado" value="$tiempo_estimado">
         <input type="hidden" name="nombre_usuario" id="nombre_usuario" value="$usuario_nombre">
+        <input type="hidden" name="es_reproceso" id="es_reproceso" value="0">   
         <!-- Main Layout Structure -->
         <div class="layout-container">
             <!-- Header Information -->
@@ -91,7 +97,7 @@ echo <<<HTML
                         <svg xmlns="http://www.w3.org/2000/svg" class="indicator-svg" xml:space="preserve" viewBox="0 0 73.935 73.935">
                             <path d="M52.279 73.935H21.656L0 52.279V21.655L21.655 0H52.28l21.655 21.655V52.28L52.279 73.935zm-29.381-3h28.139l19.898-19.897v-28.14L51.037 2.999H22.898L3 22.897v28.14l19.898 19.898z" />
                         </svg>
-                        <div id="eficienciaxcolaborador" class="indicator-value">$operario_avance_meta_dia</div>
+                        <div id="eficienciaxcolaborador" class="indicator-value">0.00 %</div>
                     </div>
                 </div>
 
@@ -106,7 +112,7 @@ echo <<<HTML
                         <svg xmlns="" class="triangle-svg" viewBox="0 0 32 32">
 
                         </svg>
-                        <div class="reprocesos-value">0</div>
+                        <div id="reprocesos" class="reprocesos-value">0</div>
                         <div class="reprocesos-label">REPROCESOS</div>
                     </div>
                 </div>
@@ -126,7 +132,7 @@ echo <<<HTML
             <!-- Event Buttons Grid -->
             <div class="event-grid">
                 <button class="event-btn" motivoid="1" tipo="1">Desmanche</button>
-                <button class="event-btn" motivoid="2" tipo="1">Reproceso</button>
+                <button class="event-btn" motivoid="2" tipo="3">Reproceso</button>
                 <button class="event-btn" motivoid="3" tipo="2">Soporte</button>
 				<button class="event-btn" motivoid="4" tipo="1">Servicios<br>Higienicos</button>
                 <button class="event-btn" motivoid="5" tipo="1">Refrigerio</button>

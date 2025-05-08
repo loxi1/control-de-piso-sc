@@ -1,146 +1,158 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const urlapi = document.querySelector('input[name="api"]').value; 
+    //Obtener la url del API
+    const urlapi = document.querySelector('input[name="api"]').value
+    
+    //Funcion para activar y desactivar el preload
+    const loadingData = (estado) => {
+        const loading = document.querySelector("#preloader")
+        document.body.style.overflow = estado ? "hidden" : "auto"
+
+        if (estado) 
+            loading.classList.remove("d-none")
+        else
+            loading.classList.add("d-none")        
+    }
 
     // Variables para el temporizador
-    let timer;
-    let isRunning = true;
-    const btnempezar = document.getElementById('btnempezar');
-    const timerDisplay = document.getElementById('timerDisplay');
-    const bgcontbtn = document.getElementById('btns');
-    const usuario = document.querySelector('input[name="usuario"]').value;
+    let timer
+    let isRunning = true
+    let seconds = parseInt(document.getElementById('segundos').value) || 0
 
-    const btnsalir = document.getElementById('btnsalir');
-    const btnatras = document.getElementById('btnatras');
+    //Elementos
+    const btnempezar = document.getElementById('btnempezar')
+    const timerDisplay = document.getElementById('timerDisplay')
+    const bgcontbtn = document.getElementById('btns')
 
-    let seconds = parseInt(document.getElementById('segundos').value) || 0;
-    const idmecanico = document.getElementById("mecanico_id");
+    //Variables necesarias
+    const usuario = document.querySelector('input[name="usuario"]').value
+    const evento = document.querySelector('input[name="evento_id"]').value
+    const ciclo = document.querySelector('input[name="ciclo_id"]').value
 
-    // Mostrar tiempo ya transcurrido al cargar
-
-    iniciar();
+    //Inicia el cronometro
+    iniciar()
 
     // Formatear tiempo
     function formatTime(totalSeconds) {
-        const hours = Math.floor(totalSeconds / 3600);
-        const minutes = Math.floor((totalSeconds % 3600) / 60);
-        const seconds = totalSeconds % 60;
+        const hours = Math.floor(totalSeconds / 3600)
+        const minutes = Math.floor((totalSeconds % 3600) / 60)
+        const seconds = totalSeconds % 60
 
         return [
             hours.toString().padStart(2, '0'),
             minutes.toString().padStart(2, '0'),
             seconds.toString().padStart(2, '0')
-        ].join(':');
+        ].join(':')
     }
 
     // Actualizar temporizador
     function updateTimer() {
-        seconds++;
-        timerDisplay.textContent = formatTime(seconds);
-    }
-
-    // Iniciar temporizador
-    btnempezar.addEventListener('click', function () {
-        if (!isRunning) {
-            iniciar();
-        } else {
-            parar();
-        }
-        logoutScriptCase("blank_evento_costura")
-    });
+        seconds++
+        timerDisplay.textContent = formatTime(seconds)
+    }        
 
     function iniciar() {
-        isRunning = true;
-        timerDisplay.textContent = "00:00:00";
-        timer = setInterval(updateTimer, 1000);
-        btnempezar.textContent = 'FINALIZAR';
-        bgcontbtn.classList.add('bg-finalizar');
-        bgcontbtn.classList.remove('bg-inicio');
+        isRunning = true
+        timerDisplay.textContent = "00:00:00"
+        timer = setInterval(updateTimer, 1000)
+        btnempezar.textContent = 'FINALIZAR'
+        bgcontbtn.classList.add('bg-finalizar')
+        bgcontbtn.classList.remove('bg-inicio')
     }
 
     function parar() {
-        isRunning = false;
-        clearInterval(timer);
-        btnempezar.textContent = 'INICIO';
-        timerDisplay.textContent = "00:00:00";
-        bgcontbtn.classList.add('bg-inicio');
-        bgcontbtn.classList.remove('bg-finalizar');
+        isRunning = false
+        clearInterval(timer)
+        btnempezar.textContent = 'INICIO'
+        timerDisplay.textContent = "00:00:00"
+        bgcontbtn.classList.add('bg-inicio')
+        bgcontbtn.classList.remove('bg-finalizar')
+    }
+
+    // Iniciar temporizador
+    btnempezar.addEventListener('click', toggleTimerPrincipal)
+
+    async function toggleTimerPrincipal() {
+        if (!isRunning)
+            iniciar()
+        else
+            parar()
+
+        if (evento < 1 || ciclo < 1)
+            return null      
+
+        await saveEvento("save_cerrar_evento_ciclo_normal", { evento, ciclo, usuario })
+        loadingData(true)
+        window.top.location.href = `${urlapi}blank_evento_costura/`   
     }
 
     // Limpiar al cerrar
     window.addEventListener('beforeunload', function () {
-        if (isRunning) {
-            clearInterval(timer);
+        if (isRunning)
+            clearInterval(timer)
+    })
+
+    //Mostra el tiempo improductivo
+    actualizarTiempos()
+
+    // Puedes repetirlo cada 5 minutos si deseas: setInterval(() => actualizarTiempos(usuarioid), 5 * 60 * 1000)
+    async function actualizarTiempos() {
+        if (!usuario || usuario.trim() === "") {
+            console.warn("El usuario no está definido o está vacío, no se puede actualizar tiempos improductivos.")
+            return
         }
-    });
-
-    //Salir
-    btnsalir.addEventListener('click', function () {
-        handleExit('app_Login_costura');
-    });
-    
-    // Atras
-    btnatras.addEventListener('click', function () {
-        handleExit('blank_evento_costura');
-    });
-
-    // Función principal para manejar la salida o redirección
-    async function handleExit(url) {
-        try {
-            await logoutScriptCase(url);
-        } catch (error) {
-            console.error("Error al manejar la salida:", error);
-        }
-    }
-
-    // Función para manejar el logout y redirección
-    async function logoutScriptCase(url = '') {
-        // Detener cualquier proceso relacionado
-        parar();
-
-        const evento = parseInt(document.getElementById("evento_id").value);
-        const ciclo = parseInt(document.getElementById("ciclo_id").value);
-
-        // Solo guardar el evento si es un número válido
-        if (!isNaN(evento) && !isNaN(ciclo)) {
-            await saveEvento("save_cerrar_evento_ciclo_normal", { evento, ciclo, usuario });
-        }
-
-        // Redirigir si se proporciona una URL
-        if (url !== '') {
-            window.top.location.href = `${urlapi}${url}/`;
+        const data = await metodoGet('get_tiempo_improductivo',`usuario=${usuario}`)
+        if (data) {
+            // Actualizar los valores en el DOM
+            document.getElementById("timp").textContent = data.timp
+            document.getElementById("pimp").textContent = data.pimp
         }
     }
 
     // Función para guardar el evento
     async function saveEvento(metodo, payload = {}) {
-        const url = `${urlapi}${metodo}/?nmgp_outra_jan=true`;        
+        const url = `${urlapi}${metodo}/?nmgp_outra_jan=true`        
         try {
-            const data = await postJSON(url, payload);
-            if (data.code === 200) {
-                evento = data.data.evento;
-            } else {
-                document.getElementById("evento_id").value = 0;
-                console.error("Error en la respuesta:", data);
-            }
+            const data = await postJSON(url, payload)
+            let evento = (data.code === 200) ? data.data.evento : 0
+            document.getElementById("evento_id").value = evento
         } catch (error) {
-            console.error("Error al guardar evento:", error);
+            console.error("Error al guardar evento:", error)
         }
     }
 
     // Función para realizar la solicitud POST y manejar el JSON
     async function postJSON(url, data) {
         try {
+            loadingData(true)
             const response = await fetch(url, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify(data)
-            });
-            return await response.json();
+            })
+            return await response.json()
         } catch (error) {
-            console.error("Error en la petición:", error);
-            return { code: 500, msn: "Error en fetch", data: null };
+            return { code: 500, msn: "Error en fetch", data: null }
+        } finally {
+            loadingData(false)
         }
     }
-});
+
+    // Función para obtener datos de un metodo
+    async function metodoGet(metodo, param) {
+        const url = `${urlapi}${metodo}/?${param}`
+        try {
+            loadingData(true)
+            const response = await fetch(url)
+            const data = await response.json()
+
+            return data.code === 200 ? data.data : null
+
+        } catch (error) {
+            return null
+        } finally {
+            loadingData(false)
+        }
+    }
+})
