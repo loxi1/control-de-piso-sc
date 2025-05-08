@@ -86,7 +86,6 @@ function update_soporte($updsoporte, $soporte): ?int {
         // Detectar si es una función SQL (e.g., NOW(), TIMEDIFF(...))
         $esFuncionSQL = is_string($valor) && preg_match('/^\s*[A-Z_]+\s*\(.*\)\s*$/i', $valor);
 
-
         if (is_numeric($valor) || $esFuncionSQL) {
             $set[] = "$campo = $valor";
         } else {
