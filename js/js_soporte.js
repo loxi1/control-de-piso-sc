@@ -145,6 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (soporteid < 1 || cicloid < 1) {
                 return null
             }
+            
             let tiatencion = 1
 
             let payload = {
@@ -205,6 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (soporteid < 1 || cicloid < 1) {
             return null
         }
+
         let payload = {
             problema,
             soporteid,

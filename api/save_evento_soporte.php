@@ -45,7 +45,7 @@ if(!empty($problema)) {
 
 if(!empty($tiatencion)) {
     $updsoporte["tiempo_inicio_atencion"] = "NOW()";
-    $updsoporte["  "] = "NOW()";
+    $updsoporte["tiempo_inicio_atencion_mec"] = "NOW()";
 }
 
 if(!empty($usuario)) {
@@ -65,7 +65,6 @@ $soporteid = update_soporte($updsoporte, $soporte);
 // ✅ Actualizar ciclo si es necesario
 if(!empty($cicloid) && !empty($tfatencion) && !empty($usuario)) {
     $sql = "UPDATE ciclo SET tiempo_fin = NOW(), tiempo_trascurrido = TIMEDIFF(NOW(), tiempo_inicio), usuario_modifica='$usuario' WHERE ciclo_id = $cicloid";
-    print_r($sql);
     sc_exec_sql($sql);
 }
 
@@ -85,6 +84,7 @@ function update_soporte($updsoporte, $soporte): ?int {
     foreach ($updsoporte as $campo => $valor) {
         // Detectar si es una función SQL (e.g., NOW(), TIMEDIFF(...))
         $esFuncionSQL = is_string($valor) && preg_match('/^\s*[A-Z_]+\s*\(.*\)\s*$/i', $valor);
+
 
         if (is_numeric($valor) || $esFuncionSQL) {
             $set[] = "$campo = $valor";
