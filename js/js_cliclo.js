@@ -254,7 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
     actualizarEficiencia()
 
     async function actualizarEficiencia() {
-        const data = await metodoGet('get_eficiencia',`usuario=${usuario}`)
+        const data = await metodoGet('get_eficiencia',`usuario=${usuario}`, false)
         if (data) {
             // Actualizar los valores en el DOM
             document.getElementById("eficienciaxcolaborador").textContent = data.eficiencia
@@ -293,10 +293,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Función para obtener datos de un metodo
-    async function metodoGet(metodo, param) {
+    async function metodoGet(metodo, param, mostrarLoader = true) {
         const url = `${urlapi}${metodo}/?${param}`
         try {
-            loadingData(true);
+            if (mostrarLoader) loadingData(true);
             const response = await fetch(url)
             const data = await response.json()
 
@@ -304,7 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             return null          
         } finally {
-            loadingData(false);
+            if (mostrarLoader) loadingData(false);
         }
     }
 })
