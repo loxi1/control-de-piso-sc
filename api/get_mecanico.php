@@ -19,6 +19,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 
 $id = $_GET['id'] ?? null;
 
+if(empty($id)) {
+    responder(422, 'Se requiere el parámetro "id".');
+}
+
 $select_sql_sybase = "select mecanico_asignado from evento_soporte where evento_soporte_id=$id";
 sc_lookup(rs_data_sybase, $select_sql_sybase);
 

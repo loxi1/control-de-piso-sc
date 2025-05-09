@@ -1,13 +1,15 @@
 <?php
 $costura_id = [vg_costura_id];
 
+$op = [vg_op];
+
 $operacion = [vg_operacion];
 
 $vglinea_ = [vg_linea];
 
 $linea = 'L-' . $vglinea_;
 
-$usuario = [usr_login]; 
+$usuario = [usr_login];
 
 $usuario_nombre = [usr_name];
 
@@ -19,18 +21,18 @@ $aray_uri = explode("/", $_SERVER['REQUEST_URI']);
 array_pop($aray_uri); // Eliminar el último elemento (nombre del archivo)
 array_pop($aray_uri);
 array_push($aray_uri, "");
-$uri = implode("/",$aray_uri);
+$uri = implode("/", $aray_uri);
 
-$api = $_SERVER['REQUEST_SCHEME']."://".$_SERVER['HTTP_HOST'].$uri;
+$api = $_SERVER['REQUEST_SCHEME'] . "://" . $_SERVER['HTTP_HOST'] . $uri;
 
 // CSS y JS de Bootstrap 5
-echo "<link rel='stylesheet' href='".sc_url_library("prj","bootstrap5","css/bootstrap.min.css")."' />";
+echo "<link rel='stylesheet' href='" . sc_url_library("prj", "bootstrap5", "css/bootstrap.min.css") . "' />";
 echo "<link rel='stylesheet' href='../_lib/css/css_ciclo.css' />";
 echo "<link rel='stylesheet' href='../_lib/css/sweetalert2.min.css' />";
 
 // Nota: Para JS, usa el script tag en lugar de link
-echo "<script src='".sc_url_library("prj","bootstrap5","js/bootstrap.bundle.min.js")."'></script>";
-echo "<script src='../_lib/js/js_ciclo.js?rand=".rand()."'></script>";
+echo "<script src='" . sc_url_library("prj", "bootstrap5", "js/bootstrap.bundle.min.js") . "'></script>";
+echo "<script src='../_lib/js/js_ciclo.js?rand=" . rand() . "'></script>";
 echo "<script src='../_lib/js/sweetalert2.all.min.js'></script>";
 //echo "<script src='".sc_url_library("prj", "mantenimiento_control_piso", "js/ciclo.js?rand=".rand())."' />";
 
