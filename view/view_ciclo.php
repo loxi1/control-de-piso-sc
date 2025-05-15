@@ -7,14 +7,14 @@ $operacion = [vg_operacion];
 
 $vglinea_ = [vg_linea];
 
-$linea = 'L-' . $vglinea_;
+$linea = $vglinea_."B";
 
 $usuario = [usr_login];
 
 $usuario_nombre = [usr_name];
 
 $tiempo_estimado = [vg_tiempo_estimado]; //Expresado en minutos
-
+$tiempo_es = !empty($tiempo_estimado) ? number_format($tiempo_estimado, 2, '.', '') : "0.00";
 $linea_avance_meta_dia = "50 / 300<br>14.3%";
 
 $aray_uri = explode("/", $_SERVER['REQUEST_URI']);
@@ -36,6 +36,49 @@ echo "<script src='../_lib/js/js_ciclo.js?rand=" . rand() . "'></script>";
 echo "<script src='../_lib/js/sweetalert2.all.min.js'></script>";
 //echo "<script src='".sc_url_library("prj", "mantenimiento_control_piso", "js/ciclo.js?rand=".rand())."' />";
 
+// Consulta MySQL mejorada y segura
+$sql = "select ciclo_id
+from ciclo WHERE usuario_registra='$usuario' and estado_id=1
+AND (tiempo_trascurrido IS NULL OR tiempo_trascurrido = '00:00:00')
+and fecha_creacion <= now() order by ciclo_id desc limit 1;";
+
+sc_lookup(rs_data_sybase, $sql);
+
+$tipo = null;
+$evento = null;
+$segundos = 0;
+$cicloid = 0;
+if (!empty({rs_data_sybase}[0])) {
+    $sql = "select ciclo_id, motivo_id, motivo_tipo, DATEDIFF(CURDATE(), fecha_creacion) AS dias_diferencia,
+    TIMESTAMPDIFF(SECOND, tiempo_inicio, NOW()) AS segundos
+    from ciclo WHERE ciclo_id=".{rs_data_sybase}[0][0]."
+    HAVING dias_diferencia IN (0, 1)";
+    sc_lookup(extciclo, $sql);
+    if({extciclo}[0][1] == 0 || {extciclo}[0][1] == 1) {
+        $cicloid = {extciclo}[0][0];
+        if (!empty({extciclo}[0][1])) {
+            //tipo=2 Soporte
+            $tipo = {extciclo}[0][2];
+            $tb = $tipo == 2 ? "evento_soporte" : "evento_normal";
+            $co = $tipo == 2 ? "evento_soporte_id" : "evento_normal_id";
+            
+            $direciona = $tipo == 2 ? "blank_soporte_ciclo" : "blank_evento_ciclo_normal";
+            $direciona = $api.$direcciona;
+            if(!empty($cicloid)) {
+                $sql = "select $co as evento from $tb where ciclo_id=$cicloid limit 1;"
+                sc_lookup(rs_data_evento, $sql);
+
+                if(!empty({rs_data_evento}[0][0])) {
+                    header("Location: $direciona?evento=".{rs_data_evento}[0][0]); /* Redirección del navegador */
+                    exit;
+                }
+            }        
+        } else {
+            $segundos = intval({extciclo}[0][3]);
+        }
+    }    
+}
+
 echo <<<HTML
 <!DOCTYPE html>
 <html lang="es">
@@ -54,14 +97,16 @@ echo <<<HTML
         </div>
 
 		<input type="hidden" name="costura_id" id="costura_id" value="$costura_id">
-        <input type="hidden" name="ciclo_id" id="ciclo_id" value="0">
+        <input type="hidden" name="ciclo_id" id="ciclo_id" value="$cicloid">
         <input type="hidden" name="api" id="api" value="$api">
         <input type="hidden" name="operacion" id="operacion" value="$operacion">
-        <input type="hidden" name="linea" id="linea" value="$vglinea_">
+        <input type="hidden" name="linea" id="linea" value="$linea">
         <input type="hidden" name="usuario" id="usuario" value="$usuario">
         <input type="hidden" name="tiempo_estimado" id="tiempo_estimado" value="$tiempo_estimado">
         <input type="hidden" name="nombre_usuario" id="nombre_usuario" value="$usuario_nombre">
         <input type="hidden" name="es_reproceso" id="es_reproceso" value="0">   
+        <input type="hidden" name="es_op" id="es_op" value="$op">
+        <input type="hidden" name="segundos" id="segundos" value="$segundos">
         <!-- Main Layout Structure -->
         <div class="layout-container">
             <!-- Header Information -->
@@ -81,7 +126,7 @@ echo <<<HTML
             </div>
 
             <div class="header-section header-bottom">
-                <div>Tiempo Estimado: $tiempo_estimado</div>
+                <div>Tiempo Estimado: $tiempo_es</div>
                 <div>$linea</div>
             </div>
 
@@ -126,7 +171,7 @@ echo <<<HTML
                         <svg xmlns="http://www.w3.org/2000/svg" class="indicator-svg" xml:space="preserve" viewBox="0 0 73.935 73.935">
                             <path d="M52.279 73.935H21.656L0 52.279V21.655L21.655 0H52.28l21.655 21.655V52.28L52.279 73.935zm-29.381-3h28.139l19.898-19.897v-28.14L51.037 2.999H22.898L3 22.897v28.14l19.898 19.898z" />
                         </svg>
-                        <div class="indicator-value">$linea_avance_meta_dia</div>
+                        <div class="indicator-value" id="indicator-value">$linea_avance_meta_dia</div>
                     </div>
                 </div>
             </div>
@@ -155,7 +200,7 @@ echo <<<HTML
                     </div>
                 </div>
                 <div class="footer-item footer-dark">
-                    <strong id="timp">0.0 hrs</strong>
+                    <strong id="timp">0:00:00 hms</strong>
                 </div>
                 <div class="footer-item footer-light">
                     <strong id="pimp">0.0 %</strong>

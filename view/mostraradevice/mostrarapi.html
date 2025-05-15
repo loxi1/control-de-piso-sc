@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Subir archivo device.json</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2em;
+    }
+    .status {
+      margin-top: 1em;
+      font-weight: bold;
+    }
+    .success {
+      color: green;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <h2>Sube el archivo <code>device.json</code></h2>
+
+  <input type="file" id="fileInput" accept=".json"><br>
+  <p class="status">
+    <strong>Device ID:</strong> <span id="deviceId">Esperando archivo...</span>
+  </p>
+
+  <script>
+    document.getElementById('fileInput').addEventListener('change', function (event) {
+      const file = event.target.files[0];
+      const output = document.getElementById('deviceId');
+
+      if (!file) {
+        output.textContent = "Ningún archivo seleccionado.";
+        output.className = 'status error';
+        return;
+      }
+
+      // Validar nombre exacto del archivo si deseas
+      if (file.name !== "device.json") {
+        output.textContent = "El archivo debe llamarse device.json.";
+        output.className = 'status error';
+        return;
+      }
+
+      const reader = new FileReader();
+
+      reader.onload = function (e) {
+        try {
+          const content = e.target.result.trim();
+          const json = JSON.parse(content);
+
+          const deviceId = json.deviceid;
+          if (deviceId) {
+            output.textContent = deviceId;
+            output.className = 'status success';
+          } else {
+            output.textContent = "Campo 'deviceid' no encontrado en el JSON.";
+            output.className = 'status error';
+          }
+        } catch (error) {
+          output.textContent = "Error al leer o interpretar el archivo.";
+          output.className = 'status error';
+          console.error("Error al parsear el JSON:", error);
+        }
+      };
+
+      reader.onerror = function () {
+        output.textContent = "Error al leer el archivo.";
+        output.className = 'status error';
+      };
+
+      reader.readAsText(file);
+    });
+  </script>
+</body>
+</html>

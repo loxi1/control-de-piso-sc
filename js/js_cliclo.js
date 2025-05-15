@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Variables para el temporizador
     let timer
-    let seconds = 0
+    let seconds = parseInt(document.getElementById('segundos').value) || 0
     let isRunning = false
 
     //Elementos
@@ -215,25 +215,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${pagina}/?evento=${evento}`
     }
 
-    // Función para realizar la solicitud POST y manejar el JSON
-    async function postJSON(url, data) {
-        try {
-            loadingData(true);
-            const response = await fetch(url, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(data)
-            })
-            return await response.json()
-        } catch (error) {
-            return { code: 500, msn: "Error en fetch", data: null }
-        } finally {
-            loadingData(false);
-        }
-    }
-
     //Mostra el tiempo improductivo
     actualizarTiempos()
 
@@ -292,6 +273,61 @@ document.addEventListener('DOMContentLoaded', () => {
         await saveCiclo("save_cerrar_ciclo", payload)
     }
 
+    // Obtener Meta x OP x Línea x Día
+    async function getMetaxDiaxLinea() {
+        const op = parseInt(document.getElementById("es_op")?.value) || 0
+        const linea = document.getElementById("linea").value.trim() || ""
+
+        if (op <= 0 || !linea) return 0
+
+        try {
+            const data = await metodoGet("get_meta_x_op_linea_dia", `op=${op}&linea=${linea}`)
+            return data?.meta ? parseInt(data.meta) : 0
+        } catch {
+            return 0
+        }
+    }
+
+    // Obtener # de timbrados x OP x Línea x Día
+    async function getTimbradasxDia() {
+        const op = parseInt(document.getElementById("es_op")?.value) || 0
+        const linea = document.getElementById("linea").value.trim() || ""
+
+        if (op <= 0 || !linea) return 0
+
+        try {
+            const data = await metodoGet("get_cantidad_timbradas_x_dia", `op=${op}&linea=${linea}`)
+            return data?.cant ? parseInt(data.cant) : 0
+        } catch {
+            return 0
+        }
+    }
+
+    async function mostrarPorcentajeDeMetas() {
+        try {
+            const numTimbrados = await getTimbradasxDia();
+            const numMeta = await getMetaxDiaxLinea();
+
+            let porcentaje = 0;
+            if (numMeta > 0) {
+                porcentaje = (numTimbrados / numMeta) * 100;
+            }
+
+            const indicador = document.getElementById("indicator-value");
+            if (indicador) {
+                indicador.innerHTML  = `${numTimbrados} / ${numMeta}<br>${porcentaje.toFixed(2)} %`;
+            } else {
+                console.warn("Elemento con ID 'indicator-value' no encontrado.");
+            }
+        } catch (error) {
+            console.error("Error mostrando porcentaje de metas:", error);
+        }
+    }
+
+
+    //Mostra el % de metas x dia
+    mostrarPorcentajeDeMetas()
+
     // Función para obtener datos de un metodo
     async function metodoGet(metodo, param, mostrarLoader = true) {
         const url = `${urlapi}${metodo}/?${param}`
@@ -307,4 +343,24 @@ document.addEventListener('DOMContentLoaded', () => {
             if (mostrarLoader) loadingData(false);
         }
     }
+
+    // Función para realizar la solicitud POST y manejar el JSON
+    async function postJSON(url, data) {
+        try {
+            loadingData(true);
+            const response = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            })
+            return await response.json()
+        } catch (error) {
+            return { code: 500, msn: "Error en fetch", data: null }
+        } finally {
+            loadingData(false);
+        }
+    }
+    iniciar()
 })

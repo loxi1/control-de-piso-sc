@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Ver el dispositivo.json</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 2em;
+        }
+
+        .status {
+            margin-top: 1em;
+            font-weight: bold;
+        }
+
+        .success {
+            color: green;
+        }
+
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Sube el archivo <code>device.json</code></h2>
+
+    <p class="status">
+        <strong>Device ID:</strong> <span id="deviceId">Esperando archivo...</span>
+    </p>
+    <div id="debuglog"
+        style="position:fixed;bottom:0;left:0;width:100%;max-height:30%;overflow-y:auto;
+                background-color:rgba(0,0,0,0.85);color:#00FF00;font-size:16px;
+                padding:10px;z-index:9999;font-family:monospace;">
+    </div>
+</body>
+
+</html>

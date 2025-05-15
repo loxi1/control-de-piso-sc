@@ -57,6 +57,8 @@ if(!empty($tfatencion)) {
     $updsoporte["tiempo_fin_atencion"] = "NOW()";
     $updsoporte["tiempo_transcurrido"] = "TIMEDIFF(NOW(), tiempo_inicio)";
     $updsoporte["tiempo_transcurrido_atencion"] = "TIMEDIFF(NOW(), tiempo_inicio_atencion)";
+    $updsoporte["tiempo_fin_atencion_mec"] = "NOW()";
+    $updsoporte["estado"] = "6";
 }
 
 // ✅ Actualizar evento soporte

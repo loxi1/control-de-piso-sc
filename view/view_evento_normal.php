@@ -28,22 +28,29 @@ $uri = implode("/",$aray_uri);
 
 $api = $_SERVER['REQUEST_SCHEME']."://".$_SERVER['HTTP_HOST'].$uri;
 
-$exec_sql = "SELECT TIMESTAMPDIFF(SECOND, tiempo_inicio, NOW()) AS segundos, ciclo_id
+$exec_sql = "SELECT  ciclo_id, TIMESTAMPDIFF(SECOND, tiempo_inicio, NOW()) AS segundos,
+             DATEDIFF(CURDATE(), fecha_creacion) AS dias_diferencia
              FROM evento_normal 
-             WHERE evento_normal_id = ".$evento;
+             WHERE evento_normal_id = $evento 
+             AND (tiempo_trascurrido IS NULL OR tiempo_trascurrido = '00:00:00')
+             HAVING dias_diferencia IN (0, 1)";
 
 sc_lookup(ds, $exec_sql);
 $segundos = 0; // Inicializa la variable en caso de que no se obtenga resultado
 $ciclo = 0; // Inicializa la variable en caso de que no se obtenga resultado
 
-if (isset({ds[0][0]})) {
-    $segundos = {ds[0][0]};
-}
+if(!empty({ds})) {
+    if (isset({ds[0][1]})) {
+        $segundos = {ds[0][1]};
+    }
 
-if (isset({ds[0][1]})) {
-    $ciclo = {ds[0][1]};
+    if (isset({ds[0][0]})) {
+        $ciclo = {ds[0][0]};
+    }
+} else {
+    header("Location: $apilank_evento_costura/"); /* Redirección del navegador */
+    exit;
 }
-
 // CSS y JS de Bootstrap 5
 echo "<link rel='stylesheet' href='".sc_url_library("prj","bootstrap5","css/bootstrap.min.css")."' />";
 echo "<link rel='stylesheet' href='../_lib/css/css_ciclo.css' />";
@@ -117,11 +124,11 @@ echo <<<HTML
             <div class="footer-section mt-5">
                 <div class="footer-item footer-light">
                     <a class="footer-link" target="_parent" href="http://192.168.150.42:8092/scriptcase/app/eCorporativoM/form_anexo_cofaco/">
-                        <strong>Tiempo Acumulado</strong>
+                        <strong>T. Improductivo</strong>
                     </a>
                 </div>
                 <div class="footer-item footer-dark">
-                    <strong id="timp">0.0 hrs</strong>
+                    <strong id="timp">0:00:00 hms</strong>
                 </div>
                 <div class="footer-item footer-light">
                     <strong id="pimp">0.0 %</strong>

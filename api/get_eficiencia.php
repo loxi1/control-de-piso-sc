@@ -31,7 +31,6 @@ FROM ciclo ci
 LEFT JOIN costura co ON co.costura_id = ci.costua_id
 WHERE ci.usuario_registra = '".$usuario."'
   AND DATE(ci.fecha_creacion) = CURDATE()
-  AND (ci.motivo_id IS NULL OR ci.motivo_id <= 0)
   AND (ci.tiempo_trascurrido IS NOT NULL OR ci.tiempo_trascurrido <> '00:00:00')
   AND ci.estado_id = 1
 GROUP BY co.operacion, co.tiempo_estimado_operacion";

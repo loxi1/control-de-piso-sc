@@ -42,9 +42,12 @@ $exec_sql = "SELECT TIMESTAMPDIFF(SECOND, tiempo_inicio, NOW()) AS segundos, cic
             IF(tiempo_inicio_atencion IS NULL OR tiempo_inicio_atencion = '', 0, 
                TIMESTAMPDIFF(SECOND, tiempo_inicio_atencion, NOW())) AS segundos_atencion,
             problema_id,
-            mecanico_asignado
+            mecanico_asignado,
+            DATEDIFF(CURDATE(), fecha_creacion) AS dias_diferencia
             FROM evento_soporte 
-            WHERE evento_soporte_id = ".$soporte;
+            WHERE evento_soporte_id = $soporte
+            AND (tiempo_trascurrido IS NULL OR tiempo_trascurrido = '00:00:00')
+             HAVING dias_diferencia IN (0, 1)";
 
 sc_lookup(ds, $exec_sql);
 
@@ -73,6 +76,9 @@ if(!empty({ds})) {
     if (!empty({ds[0][4]})) {
         $mecanico = {ds[0][4]};
     }
+} else {
+    header("Location: $apilank_evento_costura/"); /* Redirección del navegador */
+    exit;
 }
 $base_url = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];
 $script_dir = dirname(dirname($_SERVER['REQUEST_URI'])); // sube 2 niveles
@@ -185,11 +191,11 @@ echo <<<HTML
             <div class="footer-section mt-5">
                 <div class="footer-item footer-light">
                     <a class="footer-link" target="_parent" href="http://192.168.150.42:8092/scriptcase/app/eCorporativoM/form_anexo_cofaco/">
-                        <strong>Tiempo Acumulado</strong>
+                        <strong>T. Improductivo</strong>
                     </a>
                 </div>
                 <div class="footer-item footer-dark">
-                    <strong id="timp">0.0 hrs</strong>
+                    <strong id="timp">0:00:00 hms</strong>
                 </div>
                 <div class="footer-item footer-light">
                     <strong id="pimp">0.0 %</strong>
