@@ -77,7 +77,7 @@ if(!empty({ds})) {
         $mecanico = {ds[0][4]};
     }
 } else {
-    header("Location: $apilank_evento_costura/"); /* Redirección del navegador */
+    header("Location: ".$api."blank_evento_costura/"); /* Redirección del navegador */
     exit;
 }
 $base_url = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];

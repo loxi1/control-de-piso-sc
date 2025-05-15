@@ -48,7 +48,7 @@ if(!empty({ds})) {
         $ciclo = {ds[0][0]};
     }
 } else {
-    header("Location: $apilank_evento_costura/"); /* Redirección del navegador */
+    header("Location: ".$api."bank_evento_costura/"); /* Redirección del navegador */
     exit;
 }
 // CSS y JS de Bootstrap 5
