@@ -36,10 +36,9 @@ echo "<script src='../_lib/js/js_ciclo.js?rand=" . rand() . "'></script>";
 echo "<script src='../_lib/js/sweetalert2.all.min.js'></script>";
 //echo "<script src='".sc_url_library("prj", "mantenimiento_control_piso", "js/ciclo.js?rand=".rand())."' />";
 
-// Consulta MySQL mejorada y segura
+// Consulta par obtener ciclos sin terminar, activos menores iguales a la fecha actual
 $sql = "select ciclo_id
 from ciclo WHERE usuario_registra='$usuario' and estado_id=1
-AND (tiempo_trascurrido IS NULL OR tiempo_trascurrido = '00:00:00')
 and fecha_creacion <= now() order by ciclo_id desc limit 1;";
 
 sc_lookup(rs_data_sybase, $sql);
@@ -48,13 +47,15 @@ $tipo = null;
 $evento = null;
 $segundos = 0;
 $cicloid = 0;
+
 if (!empty({rs_data_sybase}[0])) {
     $sql = "select ciclo_id, motivo_id, motivo_tipo, DATEDIFF(CURDATE(), fecha_creacion) AS dias_diferencia,
     TIMESTAMPDIFF(SECOND, tiempo_inicio, NOW()) AS segundos
     from ciclo WHERE ciclo_id=".{rs_data_sybase}[0][0]."
+    AND (tiempo_trascurrido IS NULL OR tiempo_trascurrido = '00:00:00')
     HAVING dias_diferencia IN (0, 1)";
-    sc_lookup(extciclo, $sql);
-    if({extciclo}[0][1] == 0 || {extciclo}[0][1] == 1) {
+    
+    if({extciclo}[0][3] == 0 || {extciclo}[0][3] == 1) {
         $cicloid = {extciclo}[0][0];
         if (!empty({extciclo}[0][1])) {
             //tipo=2 Soporte
@@ -62,22 +63,25 @@ if (!empty({rs_data_sybase}[0])) {
             $tb = $tipo == 2 ? "evento_soporte" : "evento_normal";
             $co = $tipo == 2 ? "evento_soporte_id" : "evento_normal_id";
             
-            $direciona = $tipo == 2 ? "blank_soporte_ciclo" : "blank_evento_ciclo_normal";
-            $direciona = $api.$direcciona;
+            $direciona = ($tipo == 2) ? "blank_soporte_ciclo" : "blank_evento_ciclo_normal";
+            $direciona = $api.$direciona;
             if(!empty($cicloid)) {
-                $sql = "select $co as evento from $tb where ciclo_id=$cicloid limit 1;"
+                $sql = "select $co as evento from $tb where ciclo_id=$cicloid limit 1;";
                 sc_lookup(rs_data_evento, $sql);
 
                 if(!empty({rs_data_evento}[0][0])) {
-                    header("Location: $direciona?evento=".{rs_data_evento}[0][0]); /* Redirección del navegador */
+                    header("Location: $direciona/"); /* Redirección del navegador */
                     exit;
                 }
             }        
         } else {
-            $segundos = intval({extciclo}[0][3]);
+            $segundos = intval({extciclo}[0][4]);
         }
     }    
 }
+/*
+
+ */
 
 echo <<<HTML
 <!DOCTYPE html>

@@ -1,4 +1,7 @@
 <?php
+$base_url = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];
+$script_dir = dirname(dirname($_SERVER['REQUEST_URI'])); // sube 2 niveles
+$api = rtrim($base_url . $script_dir, '/').'/';
 
 $costura_id = [vg_costura_id];
 
@@ -10,23 +13,13 @@ $linea = 'L-' . $vglinea_;
 
 $usuario = [usr_login]; 
 
-$usuario_nombre = [usr_name]; 
-
-$soporte = $_GET['evento'] ?? 0;
+$usuario_nombre = [usr_name];
 
 $tiempo_estimado = [vg_tiempo_estimado]; //Expresado en minutos
 
 $operario_avance_meta_dia = "20 / 270<br>10.7%";
 
 $linea_avance_meta_dia = "50 / 300<br>14.3%";
-
-$aray_uri = explode("/", $_SERVER['REQUEST_URI']);
-array_pop($aray_uri); // Eliminar el último elemento (nombre del archivo)
-array_pop($aray_uri);
-array_push($aray_uri, "");
-$uri = implode("/",$aray_uri);
-
-$api = $_SERVER['REQUEST_SCHEME']."://".$_SERVER['HTTP_HOST'].$uri;
 
 // CSS y JS de Bootstrap 5
 echo "<link rel='stylesheet' href='".sc_url_library("prj","bootstrap5","css/bootstrap.min.css")."' />";
@@ -38,51 +31,62 @@ echo "<script src='../_lib/js/js_soporte.js?rand=".rand()."'></script>";
 echo "<script src='../_lib/js/sweetalert2.all.min.js'></script>";
 //echo "<script href='".sc_url_library("prj", "mantenimiento_control_piso", "js/evento.js?rand=".rand())."' />";
 
-$exec_sql = "SELECT TIMESTAMPDIFF(SECOND, tiempo_inicio, NOW()) AS segundos, ciclo_id,
+$segundos = 0; // Inicializa la variable en caso de que no se obtenga resultado
+$ciclo = 0; // Inicializa la variable en caso de que no se obtenga resultado
+$segatencion = 0; // Inicializa la variable en caso de que no se obtenga resultado
+$problema = 0; // Inicializa la variable en caso de que no se obtenga resultado
+$mecanico = 0; // Inicializa la variable en caso de que no se obtenga resultado
+
+$sql = "select evento_soporte_id
+from evento_soporte WHERE usuario_registra='$usuario' and estado=1
+and fecha_creacion <= now() order by evento_soporte_id desc limit 1;";
+sc_lookup(rta, $sql);
+
+if(!empty({rta}[0][0])) {
+    $exec_sql = "SELECT ciclo_id, TIMESTAMPDIFF(SECOND, tiempo_inicio, NOW()) AS segundos,
             IF(tiempo_inicio_atencion IS NULL OR tiempo_inicio_atencion = '', 0, 
                TIMESTAMPDIFF(SECOND, tiempo_inicio_atencion, NOW())) AS segundos_atencion,
             problema_id,
             mecanico_asignado,
             DATEDIFF(CURDATE(), fecha_creacion) AS dias_diferencia
             FROM evento_soporte 
-            WHERE evento_soporte_id = $soporte
-            AND (tiempo_trascurrido IS NULL OR tiempo_trascurrido = '00:00:00')
+            WHERE
+             evento_soporte_id = {rta}[0][0]
+            AND (tiempo_transcurrido IS NULL OR tiempo_transcurrido = '00:00:00')
              HAVING dias_diferencia IN (0, 1)";
 
-sc_lookup(ds, $exec_sql);
+    sc_lookup(ds, $exec_sql);
 
-$segundos = 0; // Inicializa la variable en caso de que no se obtenga resultado
-$ciclo = 0; // Inicializa la variable en caso de que no se obtenga resultado
-$segatencion = 0; // Inicializa la variable en caso de que no se obtenga resultado
-$problema = 0; // Inicializa la variable en caso de que no se obtenga resultado
-$mecanico = 0; // Inicializa la variable en caso de que no se obtenga resultado
-if(!empty({ds})) {
-    if (!empty({ds[0][0]})) {
-        $segundos = {ds[0][0]};
-    }
+    if(!empty({ds}[0])) {
+        $soporte = {rta}[0][0];
+        if (!empty({ds}[0][0])) {
+            $ciclo = {ds}[0][0];
+        }
 
-    if (!empty({ds[0][1]})) {
-        $ciclo = {ds[0][1]};
-    }
+        if (!empty({ds}[0][1])) {
+            $segundos = {ds}[0][1];
+        }
 
-    if (isset({ds[0][2]})) {
-        $segatencion = {ds[0][2]};
-    }
+        if (isset({ds}[0][2])) {
+            $segatencion = {ds}[0][2];
+        }
 
-    if (!empty({ds[0][3]})) {
-        $problema = {ds[0][3]};
-    }
+        if (!empty({ds}[0][3])) {
+            $problema = {ds}[0][3];
+        }
 
-    if (!empty({ds[0][4]})) {
-        $mecanico = {ds[0][4]};
+        if (!empty({ds}[0][4])) {
+            $mecanico = {ds}[0][4];
+        }
+    } else {
+        header("Location: ".$api."blank_evento_costura/"); /* Redirección del navegador */
+        exit();
     }
 } else {
     header("Location: ".$api."blank_evento_costura/"); /* Redirección del navegador */
-    exit;
+    exit();
 }
-$base_url = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];
-$script_dir = dirname(dirname($_SERVER['REQUEST_URI'])); // sube 2 niveles
-$api_url = rtrim($base_url . $script_dir, '/');
+
 $txt_mecanico = "(Sin asignar)";
 
 echo <<<HTML

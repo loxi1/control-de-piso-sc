@@ -20,37 +20,57 @@ $operario_avance_meta_dia = "20 / 270<br>10.7%";
 
 $linea_avance_meta_dia = "50 / 300<br>14.3%";
 
-$aray_uri = explode("/", $_SERVER['REQUEST_URI']);
+/*$aray_uri = explode("/", $_SERVER['REQUEST_URI']);
 array_pop($aray_uri); // Eliminar el último elemento (nombre del archivo)
 array_pop($aray_uri);
 array_push($aray_uri, "");
 $uri = implode("/",$aray_uri);
 
-$api = $_SERVER['REQUEST_SCHEME']."://".$_SERVER['HTTP_HOST'].$uri;
+$api = $_SERVER['REQUEST_SCHEME']."://".$_SERVER['HTTP_HOST'].$uri;*/
 
-$exec_sql = "SELECT  ciclo_id, TIMESTAMPDIFF(SECOND, tiempo_inicio, NOW()) AS segundos,
-             DATEDIFF(CURDATE(), fecha_creacion) AS dias_diferencia
-             FROM evento_normal 
-             WHERE evento_normal_id = $evento 
-             AND (tiempo_trascurrido IS NULL OR tiempo_trascurrido = '00:00:00')
-             HAVING dias_diferencia IN (0, 1)";
+$base_url = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];
+$script_dir = dirname(dirname($_SERVER['REQUEST_URI'])); // sube 2 niveles
+$api = rtrim($base_url . $script_dir, '/').'/';
 
-sc_lookup(ds, $exec_sql);
-$segundos = 0; // Inicializa la variable en caso de que no se obtenga resultado
-$ciclo = 0; // Inicializa la variable en caso de que no se obtenga resultado
+$sql = "select evento_normal_id
+from evento_normal WHERE usuario_registra='$usuario' and estado=1
+and fecha_creacion <= now() order by evento_normal_id desc limit 1;";
 
-if(!empty({ds})) {
-    if (isset({ds[0][1]})) {
-        $segundos = {ds[0][1]};
-    }
+sc_lookup(rta, $sql);
 
-    if (isset({ds[0][0]})) {
-        $ciclo = {ds[0][0]};
+if(!empty({rta}[0][0])) {
+    $exec_sql = "SELECT  ciclo_id, TIMESTAMPDIFF(SECOND, tiempo_inicio, NOW()) AS segundos,
+                DATEDIFF(CURDATE(), fecha_creacion) AS dias_diferencia
+                FROM evento_normal 
+                WHERE evento_normal_id = ".{rta}[0][0]."
+                AND (tiempo_trascurrido IS NULL OR tiempo_trascurrido = '00:00:00')
+                HAVING dias_diferencia IN (0, 1)";
+    print_r($exec_sql);
+    sc_lookup(ds, $exec_sql);
+    
+    print_r({ds});
+    $segundos = 0; // Inicializa la variable en caso de que no se obtenga resultado
+    $ciclo = 0; // Inicializa la variable en caso de que no se obtenga resultado
+
+    if(!empty({ds})) {
+        if (isset({ds}[0][1])) {
+            $segundos = {ds}[0][1];
+        }
+
+        if (isset({ds}[0][0])) {
+            $ciclo = {ds}[0][0];
+        }
+    } else {
+        $nueva_url = $api . "blank_evento_costura/";
+        header("Location: $nueva_url");
+        exit(); // Detiene la ejecución después de redirigir
     }
 } else {
-    header("Location: ".$api."bank_evento_costura/"); /* Redirección del navegador */
-    exit;
+    $nueva_url = $api . "blank_evento_costura/";
+    header("Location: $nueva_url");
+    exit(); // Detiene la ejecución después de redirigir
 }
+print_r({rta}); die();
 // CSS y JS de Bootstrap 5
 echo "<link rel='stylesheet' href='".sc_url_library("prj","bootstrap5","css/bootstrap.min.css")."' />";
 echo "<link rel='stylesheet' href='../_lib/css/css_ciclo.css' />";
@@ -76,7 +96,7 @@ echo <<<HTML
             </div>
         </div>
         <input type="hidden" name="costura_id" id="costura_id" value="$costura_id">
-        <input type="hidden" name="evento_id" id="evento_id" value="$evento ">
+        <input type="hidden" name="evento_id" id="evento_id" value="$evento">
         <input type="hidden" name="ciclo_id" id="ciclo_id" value="$ciclo">
         <input type="hidden" name="api" id="api" value="$api">
         <input type="hidden" name="operacion" id="operacion" value="$operacion">

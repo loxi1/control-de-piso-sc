@@ -54,6 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isRunning) {
             iniciar()
         } else {
+            document.getElementById('segundos').value = 0
             parar()
             iniciar()
         }
@@ -104,8 +105,8 @@ document.addEventListener('DOMContentLoaded', () => {
     //Iniciar el conteo
     function iniciar() {
         isRunning = true
-        seconds = 0
         timerDisplay.textContent = "00:00:00"
+        seconds = parseInt(document.getElementById('segundos').value) || 0
         timer = setInterval(updateTimer, 1000)
         btnempezar.textContent = 'FINALIZAR'
         bgcontbtn.classList.add('bg-finalizar')
@@ -195,7 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const evento = parseInt(data.data.evento)
 
                 if (evento > 0) {
-                    const sendUrl = buildRedirectionUrl(evento, payload.tipo)
+                    const sendUrl = buildRedirectionUrl(payload.tipo)
                     direccionar(sendUrl)
                 }
             }
@@ -205,14 +206,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Función para construir la URL de redirección
-    function buildRedirectionUrl(evento, tipo) {
+    function buildRedirectionUrl(tipo) {
         let pagina = ""
         if (tipo === 2) {
             pagina = "blank_soporte_ciclo"
         } else {
             pagina = "blank_evento_ciclo_normal"
         }
-        return `${pagina}/?evento=${evento}`
+        return `${pagina}`
     }
 
     //Mostra el tiempo improductivo
@@ -362,5 +363,6 @@ document.addEventListener('DOMContentLoaded', () => {
             loadingData(false);
         }
     }
-    iniciar()
+    if(seconds >0)
+        iniciar()
 })
