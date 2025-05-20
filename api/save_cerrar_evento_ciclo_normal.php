@@ -25,9 +25,11 @@ if (json_last_error() !== JSON_ERROR_NONE) {
 }
 
 // ✅ Validar parámetros requeridos
+$costura = $param['costura'] ?? null;
 $evento = $param['evento'] ?? null;
 $ciclo = $param['ciclo'] ?? null;
 $usuario = $param['usuario'] ?? null;
+$nombre = $param['nombre'] ?? null;
 
 if (empty($evento)) {
     responder(422, 'Se requiere el parámetro "evento".');
@@ -47,5 +49,14 @@ sc_exec_sql($sql);
 
 $sql = "UPDATE ciclo SET tiempo_fin = NOW(), tiempo_trascurrido = TIMEDIFF(NOW(), tiempo_inicio), usuario_modifica='$usuario' WHERE ciclo_id = $ciclo";
 sc_exec_sql($sql);
+
+if(!empty($nombre) && !empty($costura)) {
+    $insertciclo["usuario_nombre"] = $nombre;
+    $insertciclo["usuario_registra"] = $usuario;
+    $insertciclo['costua_id'] = $costura;
+
+    $sql = "INSERT INTO ciclo (costua_id, usuario_nombre, usuario_registra) VALUES (".$insertciclo['costua_id'].", '".$insertciclo['usuario_nombre']."', '".$insertciclo['usuario_registra']."')";    
+    sc_exec_sql($sql);
+}
 
 responder(200, 'Evento Actualizado.', ['evento' => $evento]);

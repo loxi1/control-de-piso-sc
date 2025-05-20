@@ -1,7 +1,7 @@
 <?php
 $base_url = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];
 $script_dir = dirname(dirname($_SERVER['REQUEST_URI'])); // sube 2 niveles
-$api = rtrim($base_url . $script_dir, '/').'/';
+$api = rtrim(rtrim($base_url . $script_dir, '/')).'/';
 
 $costura_id = [vg_costura_id];
 
@@ -51,7 +51,7 @@ if(!empty({rta}[0][0])) {
             DATEDIFF(CURDATE(), fecha_creacion) AS dias_diferencia
             FROM evento_soporte 
             WHERE
-             evento_soporte_id = {rta}[0][0]
+             evento_soporte_id = ".{rta}[0][0]."
             AND (tiempo_transcurrido IS NULL OR tiempo_transcurrido = '00:00:00')
              HAVING dias_diferencia IN (0, 1)";
 

@@ -181,7 +181,7 @@ echo <<<HTML
             </div>
 
             <!-- Event Buttons Grid -->
-            <div class="event-grid">
+            <div class="event-grid" id="btns-eventos">
                 <button class="event-btn" motivoid="1" tipo="1">Desmanche</button>
                 <button class="event-btn" motivoid="2" tipo="3">Reproceso</button>
                 <button class="event-btn" motivoid="3" tipo="2">Soporte</button>

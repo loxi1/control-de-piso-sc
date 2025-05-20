@@ -30,7 +30,7 @@ $api = $_SERVER['REQUEST_SCHEME']."://".$_SERVER['HTTP_HOST'].$uri;*/
 
 $base_url = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];
 $script_dir = dirname(dirname($_SERVER['REQUEST_URI'])); // sube 2 niveles
-$api = rtrim($base_url . $script_dir, '/').'/';
+$api = rtrim(rtrim($base_url . $script_dir, '/')).'/';
 
 $sql = "select evento_normal_id
 from evento_normal WHERE usuario_registra='$usuario' and estado=1
@@ -45,10 +45,9 @@ if(!empty({rta}[0][0])) {
                 WHERE evento_normal_id = ".{rta}[0][0]."
                 AND (tiempo_trascurrido IS NULL OR tiempo_trascurrido = '00:00:00')
                 HAVING dias_diferencia IN (0, 1)";
-    print_r($exec_sql);
+    
     sc_lookup(ds, $exec_sql);
     
-    print_r({ds});
     $segundos = 0; // Inicializa la variable en caso de que no se obtenga resultado
     $ciclo = 0; // Inicializa la variable en caso de que no se obtenga resultado
 
@@ -103,6 +102,7 @@ echo <<<HTML
         <input type="hidden" name="linea" id="linea" value="$vglinea_">
         <input type="hidden" name="usuario" id="usuario" value="$usuario">
         <input type="hidden" name="segundos" id="segundos" value="$segundos">
+        <input type="hidden" name="nombre_usuario" id="nombre_usuario" value="$usuario_nombre">
         <!-- Main Layout Structure -->
         <div class="layout-container">
             <!-- Header Information -->

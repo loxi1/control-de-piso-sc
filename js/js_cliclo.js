@@ -130,42 +130,39 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     })
 
-    // Función principal que maneja los eventos de los botones
-    document.querySelectorAll('.event-btn').forEach(button => {
-        button.addEventListener('click', async function () {
-            const tipo = parseInt(this.getAttribute('tipo'))
-            let ciclo = parseInt(document.getElementById("ciclo_id").value)  
-            
-            const motivo = parseInt(this.getAttribute('motivoid'))
-            
-            let estado = 1
-            if (isNaN(tipo)) return
+    document.getElementById('btns-eventos').addEventListener('click', async function (e) {
+        const button = e.target.closest('.event-btn');
+        if (!button) return; // No es un botón válido
 
-            if (ciclo > 0 && !isNaN(ciclo)) {
-                // Solo guardar el ciclo si es un número válido
-                await saveCiclo("save_cerrar_ciclo",{ ciclo, estado, tipo, usuario })
-            }
+        const tipo = parseInt(button.getAttribute('tipo'));
+        const motivo = parseInt(button.getAttribute('motivoid'));
+        const ciclo = parseInt(document.getElementById("ciclo_id").value);        
 
-            const result = await Swal.fire({ // Espera el resultado de la confirmación
-                title: "¿Está seguro?",
-                text: "Descartar operación Iniciada!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Si, eliminar!",
-                cancelButtonText: "No, cancelar!"
-            })
-    
-            if (result.isConfirmed) {
-                await saveCicloEvento('save_evento_ciclo_normal', { costura, ciclo, motivo, nombre, usuario, tipo })
-                Swal.fire({
-                    title: "Eliminado!",
-                    text: "Esta direccionando al soporte.",
-                    icon: "success"
-                })
-            }
-        })
+        if (isNaN(tipo)) return;
+
+        if (ciclo > 0 && !isNaN(ciclo)) {
+            await saveCiclo("save_cerrar_ciclo", { ciclo, estado: 1, tipo, usuario });
+        }
+
+        const result = await Swal.fire({
+            title: "¿Está seguro?",
+            text: "Descartar operación Iniciada!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Si, eliminar!",
+            cancelButtonText: "No cancelar!"
+        });
+
+        if (result.isConfirmed) {
+            await saveCicloEvento('save_evento_ciclo_normal', { costura, ciclo, motivo, nombre, usuario, tipo });
+            Swal.fire({
+                title: "Eliminado!",
+                text: "Esta direccionando al soporte.",
+                icon: "success"
+            });
+        }
     })
 
     // Función para guardar el ciclo
@@ -208,10 +205,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Función para construir la URL de redirección
     function buildRedirectionUrl(tipo) {
         let pagina = ""
-        if (tipo === 2) {
-            pagina = "blank_soporte_ciclo"
+        if (tipo === 49) {
+            pagina = "blank_soporte_ciclo/"
         } else {
-            pagina = "blank_evento_ciclo_normal"
+            pagina = "blank_evento_ciclo_normal/"
         }
         return `${pagina}`
     }
@@ -328,6 +325,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
     //Mostra el % de metas x dia
     mostrarPorcentajeDeMetas()
+
+    // ✅ Declarar antes de geEvento o usar function
+    function formatearTexto(texto) {
+        const palabrasLargas = ['PAUSA ACTIVA', 'FALTA CARGA', 'SERVICIOS HIGIENICOS'];
+        const upperTexto = texto.toUpperCase().trim();
+        if (palabrasLargas.includes(upperTexto)) {
+            return upperTexto.replace(/\s+/g, "<br>");
+        }
+        return upperTexto;
+    }
+
+    // Obtener el eventos
+    geEvento()
+    // Obtener eventos desde el endpoint y construir botones
+    async function geEvento() {
+        const data = await metodoGet('get_evento_tipo', '')
+        const contbtn = document.getElementById("btns-eventos")
+
+        contbtn.innerHTML = ''; // Limpiar contenido actual
+
+        if (data && Array.isArray(data)) {
+            data.forEach(item => {
+                const btn = document.createElement("button")
+                btn.className = "event-btn"
+                btn.setAttribute("motivoid", item.id)
+                btn.setAttribute("tipo", item.tipo)
+                btn.innerHTML = formatearTexto(item.motivo)
+                
+                contbtn.appendChild(btn)
+            })
+        } else {
+            contbtn.innerHTML = '<h1 class="text-center">No hay eventos disponibles</h1>'
+        }
+    }
+
 
     // Función para obtener datos de un metodo
     async function metodoGet(metodo, param, mostrarLoader = true) {

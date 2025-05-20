@@ -46,7 +46,7 @@ if(!empty($problema)) {
 if(!empty($tiatencion)) {
     $updsoporte["tiempo_inicio_atencion"] = "NOW()";
     $updsoporte["tiempo_inicio_atencion_mec"] = "NOW()";
-    $updsoporte["tiempo_fin_aceptacion"] = "NOW()";
+	$updsoporte["tiempo_fin_aceptacion"] = "NOW()";
 }
 
 if(!empty($usuario)) {
@@ -60,17 +60,15 @@ if(!empty($tfatencion)) {
     $updsoporte["tiempo_transcurrido_atencion"] = "TIMEDIFF(NOW(), tiempo_inicio_atencion)";
     $updsoporte["tiempo_fin_atencion_mec"] = "NOW()";
     $updsoporte["estado"] = "6";
-
-    
-    $costura = !empty($param['costuraid']) ? $param['costuraid'] : null;
+	
+	$costura = !empty($param['costuraid']) ? $param['costuraid'] : null;
     $nombre = !empty($param['nombre']) ? $param['nombre'] : null;
-    
+    print_r($param);
     if(!empty($nombre) && !empty($costura)) {
         $insertciclo["usuario_nombre"] = $nombre;
         $insertciclo["usuario_registra"] = $usuario;
         $insertciclo['costua_id'] = $costura;
     }
-}
 
 // ✅ Actualizar evento soporte
 $soporteid = update_soporte($updsoporte, $soporte);
@@ -82,9 +80,11 @@ if(!empty($cicloid) && !empty($tfatencion) && !empty($usuario)) {
 }
 
 if(!empty($insertciclo)) {
-    $sql = "INSERT INTO ciclo (costua_id, tiempo_inicio, usuario_nombre, usuario_registra) VALUES (".$insertciclo['costua_id'].", NOW(), '".$insertciclo['usuario_nombre']."', '".$insertciclo['usuario_registra']."')";    
+    $sql = "INSERT INTO ciclo (costua_id, tiempo_inicio, usuario_nombre, usuario_registra) VALUES (".$insertciclo['costua_id'].", NOW(), '".$insertciclo['usuario_nombre']."', '".$insertciclo['usuario_registra']."')";
+    print_r($sql);
     sc_exec_sql($sql);
 }
+
 
 if ($soporteid !== null) {
     responder(200, 'Evento insertado correctamente.', ['soporte' => $soporteid]);

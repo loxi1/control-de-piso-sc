@@ -29,7 +29,7 @@ FROM ciclo ci
 Where ci.usuario_registra = '".$usuario."'
   AND DATE(ci.fecha_creacion) = CURDATE()
   AND ci.estado_id = 1
-  AND ci.motivo_id > 0 AND ci.motivo_tipo = 3
+  AND ci.motivo_id > 0 AND ci.motivo_tipo = 50
 GROUP BY ci.usuario_registra";
 
 sc_lookup(rs_data_sybase, $sql);

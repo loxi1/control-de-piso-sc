@@ -118,7 +118,7 @@ function guardar_evento_ciclo_normal($insevent, $tipo): ?int {
         return null;
     }
 
-    $tabla = $tipo == 2 ? 'evento_soporte' : 'evento_normal';
+    $tabla = $tipo == 49 ? 'evento_soporte' : 'evento_normal';
 
     // Preparar columnas y valores
     $columnas = implode(", ", array_keys($insevent));

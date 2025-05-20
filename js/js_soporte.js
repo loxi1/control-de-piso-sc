@@ -51,6 +51,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const soporteid = parseInt(document.getElementById("evento_soporte_id").value, 10)
     const cicloid = document.querySelector('input[name="ciclo_id"]').value
     const usuario = document.querySelector('input[name="usuario"]').value
+    const costuraid = parseInt(document.getElementById("costura_id").value, 10) || 0
+    const nombre = document.querySelector('input[name="nombre_usuario"]').value
     const problema = parseInt(document.getElementById('problema').value, 10)
 
     //Iniciar el temporalizador
@@ -102,13 +104,18 @@ document.addEventListener('DOMContentLoaded', () => {
             cicloid,
             tfatencion,
             soporteid,
+            costuraid,
+            nombre,
             usuario
         }
 
         saveSoporte('save_evento_soporte', payload)
         AlertaToast("El mecánico inicio ok!")
         loadingData(true)
-        window.top.location.href = `${urlapi}blank_evento_costura/`    
+
+        setTimeout(() => {
+            window.top.location.href = `${urlapi}blank_evento_costura/`;
+        }, 1000); // 500 milisegundos = 0.5 segundo
     }
 
     //Iniciar crometro principal
