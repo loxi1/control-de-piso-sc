@@ -70,6 +70,8 @@ if(!empty($tfatencion)) {
         $insertciclo["usuario_registra"] = $usuario;
         $insertciclo['costua_id'] = $costura;
     }
+
+    /**ACTUALIZAR EFICIENCIA, META Y REPROCESO X COSTURA  */
 }
 
 // ✅ Actualizar evento soporte

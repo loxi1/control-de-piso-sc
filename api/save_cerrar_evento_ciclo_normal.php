@@ -59,4 +59,6 @@ if(!empty($nombre) && !empty($costura)) {
     sc_exec_sql($sql);
 }
 
+/**ACTUALIZAR EFICIENCIA, META Y REPROCESO X COSTURA  */
+
 responder(200, 'Evento Actualizado.', ['evento' => $evento]);

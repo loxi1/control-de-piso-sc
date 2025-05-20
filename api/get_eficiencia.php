@@ -52,9 +52,9 @@ if (isset({rs_data_sybase}[0][0])) {
     }
 }
 
-$eficiencia = $eficiencia == 0 ? "0.00" : number_format($eficiencia, 2, '.', '');
+$eficiencia = $eficiencia == 0 ? 0 : number_format($eficiencia, 2, '.', '');
 
-$rta = ['eficiencia' => $eficiencia . ' %'];
+$rta = ['eficiencia' => $eficiencia];
 
 // ✅ Enviar respuesta JSON
 responder(200, 'Eficiencia obtenida correctamente.', $rta);

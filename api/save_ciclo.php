@@ -46,6 +46,7 @@ if ($ciclo > 0) {
                 usuario_modifica = '" . $usuario . "'
             WHERE ciclo_id = $ciclo";
     sc_exec_sql($sql);
+    /**ACTUALIZAR EFICIENCIA, META Y REPROCESO X COSTURA  */
 }
 
 // ✅ Si no hay ciclo, insertar uno nuevo
@@ -55,6 +56,9 @@ $insert['usuario_registra'] = "'" . $usuario . "'";
 $insert['usuario_nombre'] = "'" . $nombre . "'";
 
 $insertedId = guardar_ciclo($insert);
+
+/**ACTUALIZAR EFICIENCIA, META Y REPROCESO X COSTURA  */
+
 
 if ($insertedId !== null) {
     responder(200, 'Ciclo insertado correctamente.', ['ciclo' => $insertedId]);

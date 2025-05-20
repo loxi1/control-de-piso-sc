@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (estado) 
             loading.classList.remove("d-none")
         else
-            loading.classList.add("d-none")        
+            loading.classList.add("d-none")    
     }
 
     // Variables para el temporizador
@@ -24,11 +24,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnatras = document.getElementById('btnatras')
     const timerDisplay = document.getElementById('timerDisplay')
     const bgcontbtn = document.getElementById('btns')
+    const porcentameta = document.getElementById('porcentameta')
+    const porcentajeficiencia = document.getElementById('porcentajeficiencia')
+    const reprocesos = document.getElementById("reprocesos")
 
     //Variables necesarias
     const usuario = document.querySelector('input[name="usuario"]').value
     const nombre = document.getElementById("nombre_usuario").value.trim()
     const costura = parseInt(document.getElementById("costura_id").value)
+    const op = parseInt(document.getElementById("es_op")?.value) || 0
+    const linea = document.getElementById("linea").value.trim() || ""
     
     //Formatear el tiempo
     function formatTime(totalSeconds) {
@@ -55,12 +60,16 @@ document.addEventListener('DOMContentLoaded', () => {
             iniciar()
         } else {
             document.getElementById('segundos').value = 0
+            //actualizarEficiencia()
+            //mostrarPorcentajeDeMetas()
             parar()
             iniciar()
         }
+
         let ciclo = parseInt(document.getElementById("ciclo_id").value)
-        
         saveCiclo("save_ciclo", { costura, ciclo, usuario, nombre })
+        
+        saveCiclo("save_costura_datos", { costura, linea, op, usuario })
     })
 
     //Salir
@@ -76,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 confirmButtonColor: "#3085d6",
                 cancelButtonColor: "#d33",
                 confirmButtonText: "Si, eliminar!",
-                cancelButtonText: "No, cancelar!"
+                cancelButtonText: "No cancelar!"
             })
 
             let estado = (result.isConfirmed) ? 3 :2
@@ -131,18 +140,22 @@ document.addEventListener('DOMContentLoaded', () => {
     })
 
     document.getElementById('btns-eventos').addEventListener('click', async function (e) {
-        const button = e.target.closest('.event-btn');
-        if (!button) return; // No es un botón válido
+        const button = e.target.closest('.event-btn')
+        if (!button) return // No es un botón válido
 
-        const tipo = parseInt(button.getAttribute('tipo'));
-        const motivo = parseInt(button.getAttribute('motivoid'));
-        const ciclo = parseInt(document.getElementById("ciclo_id").value);        
+        const tipo = parseInt(button.getAttribute('tipo'))
+        const motivo = parseInt(button.getAttribute('motivoid'))
+        const ciclo = parseInt(document.getElementById("ciclo_id").value)   
 
-        if (isNaN(tipo)) return;
+        if (isNaN(tipo)) return
+
+        
 
         if (ciclo > 0 && !isNaN(ciclo)) {
-            await saveCiclo("save_cerrar_ciclo", { ciclo, estado: 1, tipo, usuario });
+            await saveCiclo("save_cerrar_ciclo", { ciclo, estado: 1, tipo, usuario })
         }
+        
+            
 
         const result = await Swal.fire({
             title: "¿Está seguro?",
@@ -153,15 +166,33 @@ document.addEventListener('DOMContentLoaded', () => {
             cancelButtonColor: "#d33",
             confirmButtonText: "Si, eliminar!",
             cancelButtonText: "No cancelar!"
-        });
+        })
 
         if (result.isConfirmed) {
-            await saveCicloEvento('save_evento_ciclo_normal', { costura, ciclo, motivo, nombre, usuario, tipo });
+            const elevento = await saveCicloEvento('save_evento_ciclo_normal', { costura, ciclo, motivo, nombre, usuario, tipo })
+
+            if(elevento >0) {
+                actualizarEficiencia()
+                mostrarPorcentajeDeMetas()
+
+                let meta = parseFloat(porcentameta.value)            
+                let eficiencia = parseFloat(porcentajeficiencia.value)
+
+                let param = {costura, meta, eficiencia, usuario}
+                
+                saveCiclo("save_costura_datos", param)
+
+                if (elevento > 0) {
+                    const sendUrl = buildRedirectionUrl(tipo)
+                    direccionar(sendUrl)
+                }
+            }
+            
             Swal.fire({
                 title: "Eliminado!",
                 text: "Esta direccionando al soporte.",
                 icon: "success"
-            });
+            })
         }
     })
 
@@ -190,15 +221,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await postJSON(url, payload)
 
             if (data.code === 200) {
-                const evento = parseInt(data.data.evento)
-
-                if (evento > 0) {
-                    const sendUrl = buildRedirectionUrl(payload.tipo)
-                    direccionar(sendUrl)
-                }
+                return parseInt(data.data.evento)
             }
         } catch (error) {
             console.error("Error al guardar evento ciclo:", error)
+            return 0
         }
     }
 
@@ -227,16 +254,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Ejecutar cada 3 minutos (180,000 ms)
-    setInterval(actualizarEficiencia, 3 * 60 * 1000)
+    //setInterval(actualizarEficiencia, 3 * 60 * 1000)
 
     // También puedes llamar una vez al cargar la página si es necesario
     actualizarEficiencia()
 
     async function actualizarEficiencia() {
+        porcentajeficiencia.value = 0
         const data = await metodoGet('get_eficiencia',`usuario=${usuario}`, false)
         if (data) {
-            // Actualizar los valores en el DOM
-            document.getElementById("eficienciaxcolaborador").textContent = data.eficiencia
+            let valorNumerico = data.eficiencia.toFixed(2)
+            let eficiencia = `${valorNumerico} %`
+            // Actualizar los valores en el eficiencia
+            document.getElementById("eficienciaxcolaborador").textContent = eficiencia
+            porcentajeficiencia.value = valorNumerico
         }
     }
 
@@ -247,7 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await metodoGet('get_reprocesos',`usuario=${usuario}`)
         if (data) {
             // Actualizar los valores en el DOM
-            document.getElementById("reprocesos").textContent = data.reprocesos
+            reprocesos.textContent = data.reprocesos
         }
     }
 
@@ -273,9 +304,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Obtener Meta x OP x Línea x Día
     async function getMetaxDiaxLinea() {
-        const op = parseInt(document.getElementById("es_op")?.value) || 0
-        const linea = document.getElementById("linea").value.trim() || ""
-
         if (op <= 0 || !linea) return 0
 
         try {
@@ -288,9 +316,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Obtener # de timbrados x OP x Línea x Día
     async function getTimbradasxDia() {
-        const op = parseInt(document.getElementById("es_op")?.value) || 0
-        const linea = document.getElementById("linea").value.trim() || ""
-
         if (op <= 0 || !linea) return 0
 
         try {
@@ -302,23 +327,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function mostrarPorcentajeDeMetas() {
+        let porcentaje = 0;
+        porcentameta.value  = porcentaje.toFixed(2)
+
         try {
             const numTimbrados = await getTimbradasxDia();
             const numMeta = await getMetaxDiaxLinea();
-
-            let porcentaje = 0;
             if (numMeta > 0) {
                 porcentaje = (numTimbrados / numMeta) * 100;
             }
-
             const indicador = document.getElementById("indicator-value");
             if (indicador) {
-                indicador.innerHTML  = `${numTimbrados} / ${numMeta}<br>${porcentaje.toFixed(2)} %`;
+                indicador.innerHTML  = `${numTimbrados} / ${numMeta}<br>${porcentaje.toFixed(2)} %`
+                porcentameta.value  = porcentaje.toFixed(2)
             } else {
-                console.warn("Elemento con ID 'indicator-value' no encontrado.");
+                console.warn("Elemento con ID 'indicator-value' no encontrado.")
             }
         } catch (error) {
-            console.error("Error mostrando porcentaje de metas:", error);
+            console.error("Error mostrando porcentaje de metas:", error)
         }
     }
 
@@ -395,6 +421,5 @@ document.addEventListener('DOMContentLoaded', () => {
             loadingData(false);
         }
     }
-    if(seconds >0)
-        iniciar()
+    iniciar()
 })

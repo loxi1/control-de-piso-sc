@@ -111,6 +111,8 @@ echo <<<HTML
         <input type="hidden" name="es_reproceso" id="es_reproceso" value="0">   
         <input type="hidden" name="es_op" id="es_op" value="$op">
         <input type="hidden" name="segundos" id="segundos" value="$segundos">
+        <input type="hidden" name="porcentameta" id="porcentameta" value="0">
+        <input type="hidden" name="porcentajeficiencia" id="porcentajeficiencia" value="0">
         <!-- Main Layout Structure -->
         <div class="layout-container">
             <!-- Header Information -->

@@ -85,9 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
         await saveEvento("save_cerrar_evento_ciclo_normal", { costura, nombre, evento, ciclo, usuario })
         loadingData(true)
 
-        setTimeout(() => {
-            window.top.location.href = `${urlapi}blank_evento_costura/`;
-        }, 1000); // 1000 milisegundos = 1 segundo
+        window.top.location.href = `${urlapi}blank_evento_costura/`;
     }
 
     // Limpiar al cerrar

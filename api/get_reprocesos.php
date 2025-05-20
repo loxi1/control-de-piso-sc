@@ -22,11 +22,18 @@ if(empty($usuario)) {
     responder(422, 'Se requiere el parámetro "usuario".');
 }
 
+$sqlcostura = "";
+if(isset($_GET['costura'])) {
+	if(!empty($_GET['costura'])) {
+		$sqlcostura = " AND costua_id=".intval($_GET['costura'])." ";
+	}
+}
+
 $sql = "SELECT
     ci.usuario_registra,
     count(ci.ciclo_id) as cant
 FROM ciclo ci
-Where ci.usuario_registra = '".$usuario."'
+Where ci.usuario_registra = '".$usuario."'$sqlcostura
   AND DATE(ci.fecha_creacion) = CURDATE()
   AND ci.estado_id = 1
   AND ci.motivo_id > 0 AND ci.motivo_tipo = 50

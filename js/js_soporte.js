@@ -113,9 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
         AlertaToast("El mecánico inicio ok!")
         loadingData(true)
 
-        setTimeout(() => {
-            window.top.location.href = `${urlapi}blank_evento_costura/`;
-        }, 1000); // 500 milisegundos = 0.5 segundo
+        window.top.location.href = `${urlapi}blank_evento_costura/`;
     }
 
     //Iniciar crometro principal

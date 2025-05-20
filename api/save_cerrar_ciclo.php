@@ -57,4 +57,6 @@ $txt_set = implode(", ", $set);
 $sql = "UPDATE ciclo SET $txt_set WHERE ciclo_id = $ciclo";
 sc_exec_sql($sql);
 
+/**ACTUALIZAR EFICIENCIA, META Y REPROCESO X COSTURA  */
+
 responder(200, 'Ciclo insertado correctamente.', ['ciclo' => $ciclo]);
