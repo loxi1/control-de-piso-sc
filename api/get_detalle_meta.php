@@ -7,17 +7,11 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     responder(405, 'Método no permitido. Solo se acepta GET.');
 }
 
-$costura = $_GET['costura'] ?? null;
 $op = $_GET['op'] ?? null;
 $linea = $_GET['linea'] ?? null;
 $usuario = $_GET['usuario'] ?? null;
 $empresa = "COFACO";
 $compania = "02";
-$area = "SALIDA DE COSTURA";
-
-if (empty($costura) || !ctype_digit($costura)) {
-    responder(422, 'Se requiere el parámetro "costura" numérico.');
-}
 
 if(empty($op)) {
     responder(422, 'Se requiere el parámetro "op".');
@@ -35,9 +29,6 @@ try {
     //Conexion a la base de datos
     $conn = conectar_sybase();
 
-    // ==================================
-    // 🔹 Obtener eficiencia de la meta
-    // ===============================
     $sql = "SELECT SUM(cant) AS total
         FROM (
             SELECT COUNT(*) as cant FROM ordencortetallasmov
@@ -69,6 +60,7 @@ try {
     }
     
     //Meta del día
+    $area = "SALIDA DE COSTURA";
     $sqs = "SELECT TOP 1 cantmeta
         FROM meta_linea_areas
         WHERE ccmpn=:ccmpn
@@ -95,76 +87,13 @@ try {
         responder(200, 'No se registro la meta.');
     }
 
-    $metas = ($meta > 0) ? ($canttimbradas * 100) / $meta : 0;
-    $metas = number_format($metas, 2, '.', '');
+    $rta = ($meta > 0) ? ($canttimbradas * 100) / $meta : 0;
 
-    $upd = [];
-    $upd['linea_meta'] = $metas;
+    $respuesta = [
+        'meta' => $rta
+    ];
 
-    // ======================================
-    // 🔹 Obtener la eficiencia del operario
-    // ====================================
-    $sql = "SELECT
-        co.operacion,
-        co.tiempo_estimado_operacion,
-        ROUND(SUM(TIME_TO_SEC(ci.tiempo_trascurrido)) / 60, 2) AS tiempo_total_min,
-        count(ci.ciclo_id) as cant
-    FROM ciclo ci
-    LEFT JOIN costura co ON co.costura_id = ci.costua_id
-    WHERE ci.usuario_registra = '".$usuario."'
-    AND DATE(ci.fecha_creacion) = CURDATE()
-    AND (ci.tiempo_trascurrido IS NOT NULL OR ci.tiempo_trascurrido <> '00:00:00')
-    AND ci.estado_id = 1
-    GROUP BY co.operacion, co.tiempo_estimado_operacion";
-
-    sc_lookup(rs_data_sybase, $sql);
-
-    $eficiencia = 0;
-
-    if (isset({rs_data_sybase}[0][0])) {
-        foreach ({rs_data_sybase} as $row) {
-            $tiempo_total_min = floatval($row[2]);
-            $tiempo_estimado = floatval($row[1]);
-            $cant = intval($row[3]);
-
-            if ($tiempo_total_min > 0) {
-                $valorobtenido = ($tiempo_estimado*$cant*100)/$tiempo_total_min;
-                $eficiencia += $valorobtenido;
-            }
-        }
-    }
-
-    $eficiencia = $eficiencia == 0 ? 0 : number_format($eficiencia, 2, '.', '');
-
-    $upd['operario_meta'] = $eficiencia;
-
-    // =================================
-    // 🔹 Obtener reprocesos x costura
-    // ==============================
-    $sql = "SELECT
-        ci.usuario_registra,
-        count(ci.ciclo_id) as cant
-    FROM ciclo ci
-    Where ci.usuario_registra = '".$usuario."' AND ci.costua_id = $costura
-    AND ci.estado_id = 1
-    AND ci.motivo_id > 0 AND ci.motivo_tipo = 50
-    GROUP BY ci.usuario_registra";
-
-    sc_lookup(rs_data_sybase, $sql);
-
-    $upd['reproceso'] = (isset({rs_data_sybase}[0][0])) ? intval({rs_data_sybase}[0][1]) : 0;
-
-    // : Agregar usuario que modifica
-    $upd['usuario_modifica'] = $usuario;
-
-    // ================================
-    // 🔄 Construir y ejecutar UPDATE
-    // =============================
-    $sql = formarSqlUpdate("costura", $upd, "costura_id = $costura");
-    sc_exec_sql($sql);
-
-    // ✅ Responder
-    responder(200, 'Actualizó correctamente.', ['rta' => 1]);
+    responder(200, 'Consulta exitosa.', $respuesta);
 
 } catch (PDOException $e) {
     responder(500, 'Error al consultar la base de datos: ' . $e->getMessage());

@@ -1,15 +1,6 @@
 <?php
+require_once('../_lib/util/funciones.php');
 header('Content-Type: application/json');
-
-function responder(int $code, string $msn, array $data = []): never {
-    http_response_code($code);
-    echo json_encode([
-        'code' => $code,
-        'msn'  => $msn,
-        'data' => $data
-    ]);
-    exit;
-}
 
 // ✅ Validar método HTTP
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {

@@ -1,15 +1,6 @@
 <?php
+require_once('../_lib/util/funciones.php');
 header('Content-Type: application/json');
-
-function responder(int $code, string $msn, array $data = []): never {
-    http_response_code($code);
-    echo json_encode([
-        'code' => $code,
-        'msn'  => $msn,
-        'data' => $data
-    ]);
-    exit;
-}
 
 // ✅ Validar método HTTP
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -38,7 +29,7 @@ if (empty($usuario)) {
     responder(422, 'Se requiere el parámetro "usuario".');
 }
 
-// ✅ Si hay ciclo, solo actualiza
+// 🔄 Si hay ciclo, solo actualiza
 if ($ciclo > 0) {
     $sql = "UPDATE ciclo 
             SET tiempo_fin = NOW(), 
@@ -47,18 +38,25 @@ if ($ciclo > 0) {
             WHERE ciclo_id = $ciclo";
     sc_exec_sql($sql);
     /**ACTUALIZAR EFICIENCIA, META Y REPROCESO X COSTURA  */
+    $op = $param['op'] ?? null;
+    $linea = $param['linea'] ?? null;
+    $api = getUrl();
+    $api_save = $api . '/save_costura_datos/?usuario=' . urlencode($usuario).'&linea=' . urlencode($linea) . '&costura=' . urlencode($costura) . '&op=' . urlencode($op);
+    print_r($api_save);
+    $response = apiGet($api_save);
+    if ($response === null) {
+        responder(500, 'Error al actualizar los datos de costura.');
+    }
 }
 
-// ✅ Si no hay ciclo, insertar uno nuevo
-
+// 💾 Si no hay ciclo, insertar uno nuevo
 $insert['costua_id'] = (int)$costura;
-$insert['usuario_registra'] = "'" . $usuario . "'";
-$insert['usuario_nombre'] = "'" . $nombre . "'";
+$insert['usuario_registra'] = $usuario;
+$insert['usuario_nombre'] = $nombre;
+
+$sql = formarSqlInsert("ciclo", $insert);
 
 $insertedId = guardar_ciclo($insert);
-
-/**ACTUALIZAR EFICIENCIA, META Y REPROCESO X COSTURA  */
-
 
 if ($insertedId !== null) {
     responder(200, 'Ciclo insertado correctamente.', ['ciclo' => $insertedId]);
@@ -66,16 +64,12 @@ if ($insertedId !== null) {
     responder(500, 'Error al insertar el ciclo.');
 }
 
-// ✅ Función para guardar ciclo
-function guardar_ciclo($insert): ?int {
-    if (empty($insert)) {
+// 💾 Función para guardar ciclo
+function guardar_ciclo($sql_insert): ?int {
+    if (empty($sql_insert)) {
         return null;
     }
-    
-    $columnas = implode(", ", array_keys($insert));
-    $valores = implode(", ", $insert);   
 
-    $sql_insert = "INSERT INTO ciclo ($columnas) VALUES ($valores)";
     sc_exec_sql($sql_insert);
 
     $sql_id = "SELECT LAST_INSERT_ID()";

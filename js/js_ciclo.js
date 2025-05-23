@@ -67,9 +67,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         let ciclo = parseInt(document.getElementById("ciclo_id").value)
-        saveCiclo("save_ciclo", { costura, ciclo, usuario, nombre })
-        
-        saveCiclo("save_costura_datos", { costura, linea, op, usuario })
+        saveCiclo("save_ciclo", { costura, ciclo, usuario, nombre, linea, op })
+        metodoGet("save_costura_datos", `usuario=${usuario}&linea=${linea}&costura=${costura}&op=${op}`)
     })
 
     //Salir
@@ -147,15 +146,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const motivo = parseInt(button.getAttribute('motivoid'))
         const ciclo = parseInt(document.getElementById("ciclo_id").value)   
 
-        if (isNaN(tipo)) return
-
-        
+        if (isNaN(tipo)) return        
 
         if (ciclo > 0 && !isNaN(ciclo)) {
             await saveCiclo("save_cerrar_ciclo", { ciclo, estado: 1, tipo, usuario })
-        }
-        
-            
+        }            
 
         const result = await Swal.fire({
             title: "¿Está seguro?",
@@ -169,30 +164,14 @@ document.addEventListener('DOMContentLoaded', () => {
         })
 
         if (result.isConfirmed) {
-            const elevento = await saveCicloEvento('save_evento_ciclo_normal', { costura, ciclo, motivo, nombre, usuario, tipo })
+            const elevento = await saveCicloEvento('save_evento_ciclo_normal', { costura, ciclo, motivo, nombre, usuario, tipo, op, linea })
 
-            if(elevento >0) {
-                actualizarEficiencia()
-                mostrarPorcentajeDeMetas()
-
-                let meta = parseFloat(porcentameta.value)            
-                let eficiencia = parseFloat(porcentajeficiencia.value)
-
-                let param = {costura, meta, eficiencia, usuario}
-                
-                saveCiclo("save_costura_datos", param)
-
-                if (elevento > 0) {
-                    const sendUrl = buildRedirectionUrl(tipo)
-                    direccionar(sendUrl)
-                }
+            if (elevento > 0) {
+                metodoGet("save_costura_datos", `usuario=${usuario}&linea=${linea}&costura=${costura}&op=${op}`)
+                loadingData(true)
+                const sendUrl = buildRedirectionUrl(tipo)
+                direccionar(sendUrl)
             }
-            
-            Swal.fire({
-                title: "Eliminado!",
-                text: "Esta direccionando al soporte.",
-                icon: "success"
-            })
         }
     })
 
@@ -263,8 +242,8 @@ document.addEventListener('DOMContentLoaded', () => {
         porcentajeficiencia.value = 0
         const data = await metodoGet('get_eficiencia',`usuario=${usuario}`, false)
         if (data) {
-            let valorNumerico = data.eficiencia.toFixed(2)
-            let eficiencia = `${valorNumerico} %`
+            let valorNumerico = data.eficiencia
+            let eficiencia = `${valorNumerico}%`
             // Actualizar los valores en el eficiencia
             document.getElementById("eficienciaxcolaborador").textContent = eficiencia
             porcentajeficiencia.value = valorNumerico

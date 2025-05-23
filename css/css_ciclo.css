@@ -148,6 +148,17 @@ html,body {
     text-align: center;
 }
 
+.indicator-meta-value {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: clamp(1.5 rem, 2vw, 1rem);
+    font-weight: bold;
+    color: green;
+    text-align: center;
+}
+
 .reprocesos-value {
     position: absolute;
     top: 40%;
