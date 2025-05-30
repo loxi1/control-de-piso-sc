@@ -39,9 +39,10 @@ and fecha_creacion <= now() order by evento_normal_id desc limit 1;";
 sc_lookup(rta, $sql);
 
 if(!empty({rta}[0][0])) {
-    $exec_sql = "SELECT  ciclo_id, TIMESTAMPDIFF(SECOND, tiempo_inicio, NOW()) AS segundos,
-                DATEDIFF(CURDATE(), fecha_creacion) AS dias_diferencia
-                FROM evento_normal 
+    $exec_sql = "SELECT ciclo_id, TIMESTAMPDIFF(SECOND, tiempo_inicio, NOW()) AS segundos,
+                DATEDIFF(CURDATE(), fecha_creacion) AS dias_diferencia,
+                motivo_tipo
+                FROM evento_normal
                 WHERE evento_normal_id = ".{rta}[0][0]."
                 AND (tiempo_trascurrido IS NULL OR tiempo_trascurrido = '00:00:00')
                 HAVING dias_diferencia IN (0, 1)";
@@ -50,14 +51,18 @@ if(!empty({rta}[0][0])) {
     
     $segundos = 0; // Inicializa la variable en caso de que no se obtenga resultado
     $ciclo = 0; // Inicializa la variable en caso de que no se obtenga resultado
-
+    $motivo_tipo = 0;
     if(!empty({ds})) {
+        if (isset({ds}[0][0])) {
+            $ciclo = {ds}[0][0];
+        }
+
         if (isset({ds}[0][1])) {
             $segundos = {ds}[0][1];
         }
 
-        if (isset({ds}[0][0])) {
-            $ciclo = {ds}[0][0];
+        if (isset({ds}[0][3])) {
+            $motivo_tipo= {ds}[0][3];
         }
     } else {
         $nueva_url = $api . "blank_evento_costura/";
@@ -69,7 +74,7 @@ if(!empty({rta}[0][0])) {
     header("Location: $nueva_url");
     exit(); // Detiene la ejecución después de redirigir
 }
-print_r({rta}); die();
+
 // CSS y JS de Bootstrap 5
 echo "<link rel='stylesheet' href='".sc_url_library("prj","bootstrap5","css/bootstrap.min.css")."' />";
 echo "<link rel='stylesheet' href='../_lib/css/css_ciclo.css' />";
@@ -103,6 +108,7 @@ echo <<<HTML
         <input type="hidden" name="usuario" id="usuario" value="$usuario">
         <input type="hidden" name="segundos" id="segundos" value="$segundos">
         <input type="hidden" name="nombre_usuario" id="nombre_usuario" value="$usuario_nombre">
+        <input type="hidden" name="motivo_tipo" id="motivo_tipo" value="$motivo_tipo">
         <!-- Main Layout Structure -->
         <div class="layout-container">
             <!-- Header Information -->

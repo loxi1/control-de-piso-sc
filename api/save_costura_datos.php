@@ -36,7 +36,7 @@ try {
     $conn = conectar_sybase();
 
     // ==================================
-    // 🔹 Obtener eficiencia de la meta
+    // 🔎 Obtener eficiencia de la meta
     // ===============================
     $sql = "SELECT SUM(cant) AS total
         FROM (
@@ -102,8 +102,9 @@ try {
     $upd['linea_meta'] = $metas;
 
     // ======================================
-    // 🔹 Obtener la eficiencia del operario
+    // ⚙️ Obtener la eficiencia del operario
     // ====================================
+
     $sql = "SELECT
         co.operacion,
         co.tiempo_estimado_operacion,
@@ -139,7 +140,7 @@ try {
     $upd['operario_meta'] = $eficiencia;
 
     // =================================
-    // 🔹 Obtener reprocesos x costura
+    // ⚙️ Obtener reprocesos x costura
     // ==============================
     $sql = "SELECT
         ci.usuario_registra,

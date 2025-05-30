@@ -59,14 +59,14 @@ try {
         responder(200, 'No hay prendas timbradas.');
     }
     
-    //Meta del día
+    //Meta del día cambiar: AND fecha >= CAST(GETDATE() AS DATE) AND fecha < DATEADD(DAY, 1, CAST(GETDATE() AS DATE))
     $area = "SALIDA DE COSTURA";
     $sqs = "SELECT TOP 1 cantmeta
         FROM meta_linea_areas
         WHERE ccmpn=:ccmpn
             AND nnope=:nnope
-            AND fecha >= CAST(GETDATE() AS DATE)
-            AND fecha < DATEADD(DAY, 1, CAST(GETDATE() AS DATE))
+            AND fecinicio >= GETDATE()
+            AND GETDATE() < fecfin
             AND linea=:linea
             AND empresa=:empresa
             AND area=:area";

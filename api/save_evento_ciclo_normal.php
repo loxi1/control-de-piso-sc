@@ -74,6 +74,10 @@ $insevent["motivo_id"] = (int)$motivo;
 $insevent["usuario_registra"] = $usuario;
 $insevent["usuario_nombre"] = $nombre;
 
+if($tipo != 49) {
+    $insevent["motivo_tipo"] = $tipo;
+}
+
 // ✅ Insertar evento
 $insertedId = guardar_evento_ciclo_normal($insevent, $tipo);
 

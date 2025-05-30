@@ -31,6 +31,7 @@ $usuario = $param['usuario'] ?? null;
 $tiatencion = !empty($param['tiatencion']) ? $param['tiatencion'] : null;
 $tfatencion = !empty($param['tfatencion']) ? $param['tfatencion'] : null;
 $cicloid = !empty($param['cicloid']) ? $param['cicloid'] : null;
+$tipo = $param['tipo'] ?? 0;
 
 if (empty($soporte)) {
     responder(422, 'Se requiere el parámetro "soporte".');
@@ -78,8 +79,9 @@ if(!empty($tfatencion)) {
 $soporteid = update_soporte($updsoporte, $soporte);
 
 // ✅ Actualizar ciclo si es necesario
-if(!empty($cicloid) && !empty($tfatencion) && !empty($usuario)) {
-    $sql = "UPDATE ciclo SET tiempo_fin = NOW(), tiempo_trascurrido = TIMEDIFF(NOW(), tiempo_inicio), usuario_modifica='$usuario' WHERE ciclo_id = $cicloid";
+if(!empty($cicloid) && !empty($tfatencion) && !empty($usuario) && !empty($tipo)) {
+    $settiempo = (int)$tipo === 51 ? "'00:45:00'" : "tiempo_trascurrido = TIMEDIFF(NOW(), tiempo_inicio)";
+    $sql = "UPDATE ciclo SET tiempo_fin = NOW(), tiempo_trascurrido = $settiempo, usuario_modifica='$usuario' WHERE ciclo_id = $cicloid";
     sc_exec_sql($sql);
 }
 

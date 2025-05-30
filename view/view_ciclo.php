@@ -1,6 +1,7 @@
 <?php
 require_once('../_lib/util/getDataEventos.php');
 $costura_id = [vg_costura_id];
+session_start();
 
 $op = [vg_op];
 
@@ -17,6 +18,8 @@ $usuario_nombre = [usr_name];
 $tiempo_estimado = [vg_tiempo_estimado]; //Expresado en minutos
 $tiempo_es = !empty($tiempo_estimado) ? number_format($tiempo_estimado, 2, '.', '') : "0.00";
 $linea_avance_meta_dia = "50 / 300<br>14.3%";
+
+$idingreso = intval($_SESSION["ingreso_id"] ?? 0);
 
 $aray_uri = explode("/", $_SERVER['REQUEST_URI']);
 array_pop($aray_uri); // Eliminar el último elemento (nombre del archivo)
@@ -114,6 +117,7 @@ echo <<<HTML
         <input type="hidden" name="segundos" id="segundos" value="$segundos">
         <input type="hidden" name="porcentameta" id="porcentameta" value="0">
         <input type="hidden" name="porcentajeficiencia" id="porcentajeficiencia" value="0">
+        <input type="hidden" name="idingreso" id="idingreso" value="$idingreso">
         <!-- Main Layout Structure -->
         <div class="layout-container">
             <!-- Header Information -->

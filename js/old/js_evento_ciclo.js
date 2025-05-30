@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (estado) 
             loading.classList.remove("d-none")
         else
-            loading.classList.add("d-none")
+            loading.classList.add("d-none")        
     }
 
     // Variables para el temporizador

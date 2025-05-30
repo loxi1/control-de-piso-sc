@@ -59,4 +59,39 @@ sc_exec_sql($sql);
 
 /**ACTUALIZAR EFICIENCIA, META Y REPROCESO X COSTURA  */
 
+
 responder(200, 'Ciclo insertado correctamente.', ['ciclo' => $ciclo]);
+
+function get_eficiencia($usuario): ?float {
+	$tiempo_total_min = 516;
+    $sql = "SELECT
+        co.operacion,
+        co.tiempo_estimado_operacion,
+        count(ci.ciclo_id) as cant
+    FROM ciclo ci
+    LEFT JOIN costura co ON co.costura_id = ci.costua_id
+    WHERE ci.usuario_registra = '".$usuario."'
+    AND DATE(ci.fecha_creacion) = CURDATE()
+	AND motivo_id = 0
+    AND (ci.tiempo_trascurrido IS NOT NULL OR ci.tiempo_trascurrido <> '00:00:00')
+    AND ci.estado_id = 1
+    GROUP BY co.operacion, co.tiempo_estimado_operacion";
+
+    sc_lookup(rs_data_sybase, $sql);
+
+    $eficiencia = 0;
+
+    if (isset({rs_data_sybase}[0][0])) {
+        foreach ({rs_data_sybase} as $row) {
+            $tiempo_estimado = floatval($row[1]);
+            $cant = intval($row[2]);
+
+            if ($tiempo_total_min > 0) {
+                $valorobtenido = $tiempo_estimado*$cant*100;
+                $eficiencia += $valorobtenido;
+            }
+        }
+    }
+
+    return $eficiencia == 0 ? 0 : $eficiencia / $tiempo_total_min;
+}

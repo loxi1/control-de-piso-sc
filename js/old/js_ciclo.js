@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (estado) 
             loading.classList.remove("d-none")
         else
-            loading.classList.add("d-none")    
+            loading.classList.add("d-none")        
     }
 
     // Variables para el temporizador
@@ -24,16 +24,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnatras = document.getElementById('btnatras')
     const timerDisplay = document.getElementById('timerDisplay')
     const bgcontbtn = document.getElementById('btns')
-    const porcentameta = document.getElementById('porcentameta')
-    //const porcentajeficiencia = document.getElementById('porcentajeficiencia')
     const reprocesos = document.getElementById("reprocesos")
 
     //Variables necesarias
     const usuario = document.querySelector('input[name="usuario"]').value
     const nombre = document.getElementById("nombre_usuario").value.trim()
     const costura = parseInt(document.getElementById("costura_id").value)
-    const op = parseInt(document.getElementById("es_op")?.value) || 0
-    const linea = document.getElementById("linea").value.trim() || ""
     
     //Formatear el tiempo
     function formatTime(totalSeconds) {
@@ -60,15 +56,14 @@ document.addEventListener('DOMContentLoaded', () => {
             iniciar()
         } else {
             document.getElementById('segundos').value = 0
-            //mostrarPorcentajeDeMetas()
             parar()
             iniciar()
-        }
 
+        }
         let ciclo = parseInt(document.getElementById("ciclo_id").value)
-        saveCiclo("save_ciclo", { costura, ciclo, usuario, nombre, linea, op })
-        metodoGet("save_costura_datos", `usuario=${usuario}&linea=${linea}&costura=${costura}&op=${op}`)
-        actualizarEficiencia()
+        
+        //saveCiclo("save_costura_datos", { costura, meta, eficiencia, usuario })
+        saveCiclo("save_ciclo", { costura, ciclo, usuario, nombre })
     })
 
     //Salir
@@ -99,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const ncicloid = await getSalirApp()
 
         if(ncicloid > 0) 
-            await termiarOperacion(0)
+            await termiarOperacion(3)
         const param = costura > 0 ? `?id=${costura}` : ""
         direccionar(`form_costura_operacion/${param}`)
     })
@@ -146,11 +141,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const motivo = parseInt(button.getAttribute('motivoid'))
         const ciclo = parseInt(document.getElementById("ciclo_id").value)   
 
-        if (isNaN(tipo)) return        
+        if (isNaN(tipo)) return
 
-        if (ciclo > 0 && !isNaN(ciclo)) {
+        await mostrarPorcentajeDeMetas()
+
+        //let meta = parseFloat(porcentameta.value)
+        //let eficiencia = parseFloat(porcentajeficiencia.value)
+        //let reproceso = parseInt(reprocesos.textContent) || 0
+
+       if (ciclo > 0 && !isNaN(ciclo)) {
             await saveCiclo("save_cerrar_ciclo", { ciclo, estado: 1, tipo, usuario })
-        }            
+        } 
 
         const result = await Swal.fire({
             title: "¿Está seguro?",
@@ -164,14 +165,12 @@ document.addEventListener('DOMContentLoaded', () => {
         })
 
         if (result.isConfirmed) {
-            const elevento = await saveCicloEvento('save_evento_ciclo_normal', { costura, ciclo, motivo, nombre, usuario, tipo, op, linea })
-
-            if (elevento > 0) {
-                metodoGet("save_costura_datos", `usuario=${usuario}&linea=${linea}&costura=${costura}&op=${op}`)
-                loadingData(true)
-                const sendUrl = buildRedirectionUrl(tipo)
-                direccionar(sendUrl)
-            }
+            await saveCicloEvento('save_evento_ciclo_normal', { costura, ciclo, motivo, nombre, usuario, tipo })
+            Swal.fire({
+                title: "Eliminado!",
+                text: "Esta direccionando al soporte.",
+                icon: "success"
+            })
         }
     })
 
@@ -182,8 +181,11 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const data = await postJSON(url, payload)
             if (data.code === 200) {
-                if(metodo === "save_ciclo")
+                if(metodo === "save_ciclo") {
                     document.getElementById("ciclo_id").value = data.data.ciclo
+                    let eficiencia = `${data.data.eficiencia}%`
+                    document.getElementById("eficienciaxcolaborador").textContent = eficiencia
+                }                    
             } else {
                 document.getElementById("ciclo_id").value = 0
             }
@@ -200,11 +202,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await postJSON(url, payload)
 
             if (data.code === 200) {
-                return parseInt(data.data.evento)
+                const evento = parseInt(data.data.evento)
+
+                if (evento > 0) {
+                    const sendUrl = buildRedirectionUrl(payload.tipo)
+                    direccionar(sendUrl)
+                }
             }
         } catch (error) {
             console.error("Error al guardar evento ciclo:", error)
-            return 0
         }
     }
 
@@ -237,16 +243,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // También puedes llamar una vez al cargar la página si es necesario
     actualizarEficiencia()
-
+    document.getElementById("eficienciaxcolaborador").textContent = "0.00%"
     async function actualizarEficiencia() {
-        porcentajeficiencia.value = 0
         const data = await metodoGet('get_eficiencia_x_hora',`usuario=${usuario}`, false)
-        if (data) {
-            let valorNumerico = data.eficiencia
-            let eficiencia = `${valorNumerico}%`
+        if (data) {            
+            let eficiencia = `${data.eficiencia}%`
             // Actualizar los valores en el eficiencia
-            //document.getElementById("eficienciaxcolaborador").textContent = eficiencia
-            //porcentajeficiencia.value = valorNumerico
+            document.getElementById("eficienciaxcolaborador").textContent = eficiencia
         }
     }
 
@@ -283,6 +286,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Obtener Meta x OP x Línea x Día
     async function getMetaxDiaxLinea() {
+        const op = parseInt(document.getElementById("es_op")?.value) || 0
+        const linea = document.getElementById("linea").value.trim() || ""
+
         if (op <= 0 || !linea) return 0
 
         try {
@@ -295,6 +301,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Obtener # de timbrados x OP x Línea x Día
     async function getTimbradasxDia() {
+        const op = parseInt(document.getElementById("es_op")?.value) || 0
+        const linea = document.getElementById("linea").value.trim() || ""
+
         if (op <= 0 || !linea) return 0
 
         try {
@@ -307,7 +316,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function mostrarPorcentajeDeMetas() {
         let porcentaje = 0;
-        porcentameta.value  = porcentaje.toFixed(2)
 
         try {
             const numTimbrados = await getTimbradasxDia();
@@ -318,7 +326,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const indicador = document.getElementById("indicator-value");
             if (indicador) {
                 indicador.innerHTML  = `${numTimbrados} / ${numMeta}<br>${porcentaje.toFixed(2)} %`
-                porcentameta.value  = porcentaje.toFixed(2)
             } else {
                 console.warn("Elemento con ID 'indicator-value' no encontrado.")
             }

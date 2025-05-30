@@ -40,13 +40,7 @@ if ($ciclo > 0) {
     /**ACTUALIZAR EFICIENCIA, META Y REPROCESO X COSTURA  */
     $op = $param['op'] ?? null;
     $linea = $param['linea'] ?? null;
-    $api = getUrl();
-    $api_save = $api . '/save_costura_datos/?usuario=' . urlencode($usuario).'&linea=' . urlencode($linea) . '&costura=' . urlencode($costura) . '&op=' . urlencode($op);
-    
-    $response = apiGet($api_save);
-    if ($response === null) {
-        responder(500, 'Error al actualizar los datos de costura.');
-    }
+    $api = getUrl();    
 }
 
 // 💾 Si no hay ciclo, insertar uno nuevo
