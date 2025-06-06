@@ -26,19 +26,6 @@ if (json_last_error() !== JSON_ERROR_NONE) {
 
 $codigo = $param['codigo'] ?? null;
 $id = intval($param['id'] ?? null);
-
-// Cuenta con permiso 1:No 2:Si
-$con_permiso = intval($param['con_permiso'] ?? 1);
-
-//Tipo 1 Ingreso, 2 Permiso, 3 Salida
-$tipo = intval($param['tipo'] ?? 1);
-
-// Tipo de permiso 
-//1: Ingreso puntual, 2 Ingreso tarde,
-//3: Permiso con retorno, volvere a trabajar, 4: Permiso sin retorno, 5: Permiso refriegerio, 6: Salida
-$tipo_permiso = intval($param['tipo_permiso'] ?? 1);
-
-//Fecha de permiso
 $fecha_permiso = $param['fecha_permiso'] ?? null;
 
 if (empty($codigo)) {
@@ -51,25 +38,22 @@ if (empty($id)) {
 
 $vafs = "now()";
 
-if($tipo == 1) {
-    // Si es ingreso, no se requiere fecha_permiso
-    if(!empty($fecha_permiso)) {
-        $vafs = "'$fecha_permiso'";
-    }
-    //Validar si ya existe un permiso para esa fecha con el ingreso_id y para el mismo operario
-    $sqlexiste = "select id from permiso where codigo='$codigo' and ingreso_id=$id and tipo=$tipo";
-    sc_lookup(rs_existe, $sqlexiste);
+if(!empty($fecha_permiso)) {
+    $vafs = "'$fecha_permiso'";
 
+    //Validar si ya existe un permiso para esa fecha con el ingreso_id y para el mismo operario
+    $sqlexiste = "select id from permiso where codigo='$codigo' and ingreso_id=$id and fecha_permiso='$fecha_permiso' and estado=1";
+    sc_lookup(rs_existe, $sqlexiste);
     if (!empty({rs_existe}[0][0])) {
-        $sqlupdate = "UPDATE permiso SET fecha_modificacion=now(), con_permiso=$con_permiso, fecha_permiso=$vafs, tipo_permiso=$tipo_permiso WHERE id=".{rs_existe}[0][0];
+        $sqlupdate = "UPDATE permiso SET fecha_modificacion=now() WHERE id=".{rs_existe}[0][0];
         sc_exec_sql($sqlupdate);
         responder(200, 'Ya existe un permiso para esa fecha y operario.',['permiso' => {rs_existe}[0][0]]);
     }
 }
 
-$cols = "codigo, fecha_permiso, ingreso_id, con_permiso, tipo, tipo_permiso";
+$cols = "codigo, fecha_permiso, ingreso_id";
 
-$vals = "'$codigo',$vafs, $id, $con_permiso, $tipo, $tipo_permiso";
+$vals = "'$codigo',$vafs, $id";
 $tabla = "permiso";
 
 $sql = "INSERT INTO $tabla ($cols) VALUES ($vals)";

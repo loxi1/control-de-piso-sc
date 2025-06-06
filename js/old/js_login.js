@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let payload = { codigo }
         console.log("login_operario ->", payload);
 
-        const metodo = "login_operario"
+        let metodo = "login_colaborador"
         const data = await endpoint(metodo, payload)
         console.log("data login ->", data)
 
@@ -58,7 +58,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         // 🔄 Cargar turnos
-        const datos = await metodoGet("get_turno", `codigo=${data.data.codigo}&empresa=${data.data.empresa_id}&nmgp_outra_jan=true`)
+        metodo = "get_turno"
+        const datos = await metodoGet(metodo, `nmgp_outra_jan=true`)
         console.log("datos turnos ->", datos)
         listaTurnos = Array.isArray(datos) ? datos : []
 
@@ -93,18 +94,18 @@ document.addEventListener('DOMContentLoaded', () => {
             })
 
             if (!selected) return;
-            turno = parseInt(selected);
+
+            turno = parseInt(selected)
         }
 
         payload.turno = turno
-        payload.empresa = data.data.empresa_id
 
-        console.log("payload con turno ->", payload);
+        console.log("payload con turno ->", payload)
 
         // Validar hora de ingreso
         const validaTurno = await endpoint("get_validar_hora_ingreso", payload);
         let tienePermiso = (parseInt(validaTurno.code) === 200 && parseInt(validaTurno.data.code) === 2)
-
+        console.log("data validarTurno", validaTurno)
         payload.id = validaTurno.data.id
         // 1 = ingreso, 2 = salida
         payload.tipo = 1

@@ -31,6 +31,11 @@ $motivo = !empty($param['motivo']) ? $param['motivo'] : null;
 $usuario = $param['usuario'] ?? null;
 $nombre = $param['nombre'] ?? null;
 $tipo = $param['tipo'] ?? 0;
+$idingreso = intval($param['idingreso'] ?? 0);
+
+if($idingreso <0) {
+    responder(422, 'Se requiere el parámetro "ingreso".');
+}
 
 if (empty($costura)) {
     responder(422, 'Se requiere el parámetro "costura".');
@@ -59,6 +64,7 @@ $insevent["usuario_registra"] = $usuario;
 $insevent["usuario_nombre"] = $nombre;
 $insevent["motivo_id"] = (int)$motivo;
 $insevent["motivo_tipo"] = (int)$tipo;
+$insevent["ingreso_id"] = $idingreso;
 
 // ✅ Insertar ciclo
 $ciclo = guardar_ciclo($insevent);
@@ -76,6 +82,21 @@ $insevent["usuario_nombre"] = $nombre;
 
 if($tipo != 49) {
     $insevent["motivo_tipo"] = $tipo;
+    if($tipo == 50) {
+        $sqlrepro = "SELECT
+                        ci.ingreso_id,
+                        count(ci.ciclo_id) as cant
+                    FROM ciclo ci
+                    Where ci.ingreso_id = $idingreso
+                    AND ci.estado_id = 1
+                    AND ci.motivo_id > 0 AND ci.motivo_tipo = 50
+                    GROUP BY ci.ingreso_id";
+        sc_lookup(rta_repro, $sqlrepro);
+        if(!empty({rta_repro}[0][1])) {
+            $sqling = "UPDATE ingreso  SET fecha_modificacion = NOW(), reproceso=".{rta_repro}[0][1]." WHERE id= $idingreso";
+            sc_exec_sql($sqling);
+        }
+    }
 }
 
 // ✅ Insertar evento

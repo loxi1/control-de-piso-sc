@@ -25,30 +25,20 @@ if (json_last_error() !== JSON_ERROR_NONE) {
 }
 
 $codigo = $param['codigo'] ?? null;
-$turno = $param['turno'] ?? null;
-$empresa = intval($param['empresa'] ?? 0);
-
 if (empty($codigo)) {
     responder(422, 'Se requiere el parámetro "codigo".');
 }
-if (empty($turno)) {
-    responder(422, 'Se requiere el parámetro "turno".');
-}
-
-if($empresa <= 0) {
-    responder(422, 'Se requiere el parámetro "empresa".');
-}
 
 $existe = "select id, turno_id, horario_ingreso, horario_salida, now() fecha_actual,
-horario_maximo, TIMESTAMPDIFF(SECOND, horario_ingreso, NOW()) AS tiempo_trascurrido, horario_minimo, estado 
+horario_maximo, TIMESTAMPDIFF(SECOND, horario_ingreso, NOW()) AS tiempo_trascurrido 
 from ingreso 
-where codigo_operario='$codigo' and turno_id=$turno
+where codigo_operario='$codigo' and date(horario_ingreso)<=CURDATE() and date(horario_ingreso)>=DATE_ADD(CURDATE(), INTERVAL -1 DAY) 
 ORDER BY horario_ingreso desc
 limit 1";
 
 sc_lookup(rs_data_sybase, $existe);
-$rta_existe = {rs_data_sybase};
 
+$rta_existe = {rs_data_sybase};
 $msn = "Turno ya activo.";
 $rta = [];
 if(!empty($rta_existe[0][0])) {
@@ -59,16 +49,14 @@ if(!empty($rta_existe[0][0])) {
     $horario_salida = strtotime($info[3]);
     $fecha_actual = strtotime($info[4]);
     $horario_maximo = strtotime($info[5]);
-    $horario_minimo = strtotime($info[7]);
     $tiempo_trascurrido = intval($info[6] ?? 0);
-    $estado = intval($info[8] ?? 0);
     
-    if($fecha_actual > $horario_minimo && $fecha_actual < $horario_maximo) {
+    if($fecha_actual >= $horario_ingreso && $fecha_actual < $horario_maximo) {
         $sql = "UPDATE ingreso  SET fecha_modificacion = NOW() WHERE id = $id";
         sc_exec_sql($sql);
 
-        $cant = existencia_ciclos($horario_minimo, $horario_maximo, $codigo);
-
+        $cant = existencia_ciclos($horario_ingreso, $horario_maximo, $codigo);
+		
         $rta['code'] = ($cant == 0 && $tiempo_trascurrido>0) ? 2 : 1; // Alerta permisos. 2 Muesra, 1 No muestra
         $rta['id'] = $id;
         $rta['titulo'] = "";
@@ -80,15 +68,6 @@ if(!empty($rta_existe[0][0])) {
         }
 
         responder(200, $msn, $rta);
-    } else {
-        // Registro anterior que no fue cerrado. Se debe calcular la eficiencia
-        if($estado == 1) {
-            $sql = "UPDATE ingreso SET estado = 2, fecha_modificacion = NOW() WHERE id = $id";
-            sc_exec_sql($sql);
-            $msn = "Turno cerrado correctamente.";
-        } else {
-            $msn = "Turno ya cerrado.";
-        }
     }
 }
 
@@ -100,36 +79,12 @@ $sql = "SELECT
   ingreso AS horario_ingreso,
   salida AS horario_salida,
   TIMESTAMPDIFF(SECOND, ingreso, NOW()) AS tiempo_trascurrido,
-  DAYOFWEEK(ingreso) AS dia,
-
-  -- Hora fin del turno anterior (turno diferente, dia anterior)
-  (
-    SELECT TIMESTAMP(
-      DATE(horarios.ingreso), 
-      TIME(tur.hora_fin)
-    )
-    FROM turno_horario tur
-    WHERE tur.turno_id != horarios.turno_id and tur.empresa_id = $empresa
-      AND tur.numero_dia =  CASE 
-          WHEN horarios.numero_dia = 7 THEN 7
-          ELSE horarios.numero_dia - 1
-        END
-    LIMIT 1
-  ) AS horario_minimo,
-  
-  -- Hora inicio del otro turno del mismo día
-  (
-    SELECT TIMESTAMP(DATE(horarios.salida), TIME(tur.hora_inicio))
-    FROM turno_horario tur
-    WHERE tur.turno_id != horarios.turno_id and tur.empresa_id = $empresa
-      AND tur.numero_dia = horarios.numero_dia
-    LIMIT 1
-  ) AS horario_maximo
-
+	DAYOFWEEK(ingreso) dia,
+  (select TIMESTAMP(date(horarios.salida), TIME(tur.hora_inicio)) from turno_horario tur where tur.turno_id != horarios.turno_id and tur.numero_dia=horarios.numero_dia) horario_maximo
 FROM (
   SELECT
     id,
-    numero_dia,
+	numero_dia,
     turno_id,
     considerar_almuerzo_min,
     TIMESTAMP(CURDATE(), TIME(hora_inicio)) AS ingreso,
@@ -138,11 +93,9 @@ FROM (
       TIME(hora_fin)
     ) AS salida
   FROM turno_horario
-  where empresa_id = $empresa
 ) AS horarios
-WHERE DAYOFWEEK(ingreso) = numero_dia and turno_id=$turno
-HAVING 
-  NOW() BETWEEN horario_minimo AND horario_maximo";
+where ingreso<=now() and salida>now() and DAYOFWEEK(ingreso) = numero_dia;
+";
 
 sc_lookup(rs_data_sybase, $sql);
 
@@ -154,23 +107,21 @@ if (isset({rs_data_sybase}[0][0])) {
     $inset['horario_ingreso'] = "'$data[4]'";
     $inset['horario_salida'] = "'$data[5]'";
     $inset['dia_de_la_semana'] = intval($data[7]);
-    $inset['horario_minimo'] = "'$data[8]'";
-    $inset['horario_maximo'] = "'$data[9]'";
+    $inset['horario_maximo'] = "'$data[8]'";
     $tiempo_trascurrido = intval($data[6] ?? 0);
     $fecha_actual = strtotime($data[9]);
     $horario_ingreso = strtotime($data[4]);
-    $horario_salida = strtotime($data[5]);
-    $horario_minimo = strtotime($data[8]);
-    $horario_maximo = strtotime($data[9]);
+    $horario_maximo = strtotime($data[8]);
+	$horario_salida = strtotime($data[5]);
     
     $id = guardar_ingreso_horario($inset);
-
+	
     if(empty($id)) {
         responder(500, 'No inserto horario.', $rta);
     }
 
-    $cant = existencia_ciclos($horario_minimo, $horario_maximo, $codigo);
-    
+    $cant = existencia_ciclos($horario_ingreso, $horario_maximo, $codigo);
+	
     $rta['code'] = ($cant == 0 && $tiempo_trascurrido>0) ? 2 : 1; // Alerta permisos. 2 Muesra, 1 No muestra
     $rta['id'] = $id;
     $rta['titulo'] = "";
@@ -207,19 +158,13 @@ function guardar_ingreso_horario($insert): ?int {
     return null;
 }
 
-function existencia_ciclos($fmin, $fmax, $codigo): int {
-    if (empty($fmin) || empty($fmax) || empty($codigo)) {
-        return 0;
-    }
-    $fmmin = date('Y-m-d H:i:s', $fmin);
-    $fmmax = date('Y-m-d H:i:s', $fmax);
-
+function existencia_ciclos($finicio, $fin, $codigo): int {
     $sqlciclos = "SELECT COUNT(*) AS cantidad
         FROM ciclo
         WHERE estado_id = 1
 		AND usuario_registra='$codigo'
-        AND tiempo_inicio > '$fmmin'
-        AND tiempo_fin <  '$fmmax'";
+        AND tiempo_inicio >= '$finicio'
+        AND tiempo_fin <  '$fin'";
 
     sc_lookup(rs_cant_ciclos, $sqlciclos);
     return intval({rs_cant_ciclos}[0][0] ?? 0);

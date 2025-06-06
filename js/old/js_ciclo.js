@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const usuario = document.querySelector('input[name="usuario"]').value
     const nombre = document.getElementById("nombre_usuario").value.trim()
     const costura = parseInt(document.getElementById("costura_id").value)
+    const idingreso = parseInt(document.getElementById("idingreso").value) || 0
     
     //Formatear el tiempo
     function formatTime(totalSeconds) {
@@ -63,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let ciclo = parseInt(document.getElementById("ciclo_id").value)
         
         //saveCiclo("save_costura_datos", { costura, meta, eficiencia, usuario })
-        saveCiclo("save_ciclo", { costura, ciclo, usuario, nombre })
+        saveCiclo("save_ciclo", { costura, ciclo, usuario, nombre, idingreso })
     })
 
     //Salir
@@ -76,6 +77,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 text: "Descartar operación Iniciada!",
                 icon: "warning",
                 showCancelButton: true,
+                allowOutsideClick: false,
+                allowEscapeKey: false,
                 confirmButtonColor: "#3085d6",
                 cancelButtonColor: "#d33",
                 confirmButtonText: "Si, eliminar!",
@@ -86,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             termiarOperacion(estado)
         }
-        direccionar('app_Login_costura')
+        direccionar('blank_login_operario')
     })
     
     // Atras
@@ -141,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const motivo = parseInt(button.getAttribute('motivoid'))
         const ciclo = parseInt(document.getElementById("ciclo_id").value)   
 
-        if (isNaN(tipo)) return
+        if (isNaN(tipo) || tipo == 52 ) return
 
         await mostrarPorcentajeDeMetas()
 
@@ -158,6 +161,8 @@ document.addEventListener('DOMContentLoaded', () => {
             text: "Descartar operación Iniciada!",
             icon: "warning",
             showCancelButton: true,
+            showCancelButton: true,
+            allowOutsideClick: false,
             confirmButtonColor: "#3085d6",
             cancelButtonColor: "#d33",
             confirmButtonText: "Si, eliminar!",
@@ -165,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
 
         if (result.isConfirmed) {
-            await saveCicloEvento('save_evento_ciclo_normal', { costura, ciclo, motivo, nombre, usuario, tipo })
+            await saveCicloEvento('save_evento_ciclo_normal', { idingreso, costura, ciclo, motivo, nombre, usuario, tipo })
             Swal.fire({
                 title: "Eliminado!",
                 text: "Esta direccionando al soporte.",
@@ -183,8 +188,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.code === 200) {
                 if(metodo === "save_ciclo") {
                     document.getElementById("ciclo_id").value = data.data.ciclo
-                    let eficiencia = `${data.data.eficiencia}%`
-                    document.getElementById("eficienciaxcolaborador").textContent = eficiencia
+                    let eficiencia = `${data.data.cantidad}  pds <br> ${data.data.eficiencia}%`
+                    document.getElementById("eficienciaxcolaborador").innerHTML = eficiencia
                 }                    
             } else {
                 document.getElementById("ciclo_id").value = 0
@@ -245,11 +250,11 @@ document.addEventListener('DOMContentLoaded', () => {
     actualizarEficiencia()
     document.getElementById("eficienciaxcolaborador").textContent = "0.00%"
     async function actualizarEficiencia() {
-        const data = await metodoGet('get_eficiencia_x_hora',`usuario=${usuario}`, false)
+        const data = await metodoGet('get_eficiencia_x_hora',`idingreso=${idingreso}`, false)
         if (data) {            
-            let eficiencia = `${data.eficiencia}%`
+            let eficiencia = `${data.cantidad} pds <br> ${data.eficiencia}%`
             // Actualizar los valores en el eficiencia
-            document.getElementById("eficienciaxcolaborador").textContent = eficiencia
+            document.getElementById("eficienciaxcolaborador").innerHTML = eficiencia
         }
     }
 
@@ -275,7 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function termiarOperacion(estado) {
         let ciclo = parseInt(document.getElementById("ciclo_id").value)
-        let payload = { ciclo, usuario }
+        let payload = { ciclo, usuario, idingreso }
 
         estado = parseInt(estado)
         if(estado > 0)

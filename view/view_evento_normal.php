@@ -1,5 +1,5 @@
 <?php
-
+session_start();
 $costura_id = [vg_costura_id];
 
 $operacion = [vg_operacion];
@@ -19,6 +19,8 @@ $tiempo_estimado = [vg_tiempo_estimado]; //Expresado en minutos
 $operario_avance_meta_dia = "20 / 270<br>10.7%";
 
 $linea_avance_meta_dia = "50 / 300<br>14.3%";
+
+$idingreso = intval($_SESSION["ingreso_id"] ?? 0);
 
 /*$aray_uri = explode("/", $_SERVER['REQUEST_URI']);
 array_pop($aray_uri); // Eliminar el último elemento (nombre del archivo)
@@ -109,6 +111,7 @@ echo <<<HTML
         <input type="hidden" name="segundos" id="segundos" value="$segundos">
         <input type="hidden" name="nombre_usuario" id="nombre_usuario" value="$usuario_nombre">
         <input type="hidden" name="motivo_tipo" id="motivo_tipo" value="$motivo_tipo">
+        <input type="hidden" name="idingreso" id="idingreso" value="$idingreso">
         <!-- Main Layout Structure -->
         <div class="layout-container">
             <!-- Header Information -->

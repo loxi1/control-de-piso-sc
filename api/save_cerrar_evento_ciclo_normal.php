@@ -30,6 +30,11 @@ $evento = $param['evento'] ?? null;
 $ciclo = $param['ciclo'] ?? null;
 $usuario = $param['usuario'] ?? null;
 $nombre = $param['nombre'] ?? null;
+$idingreso = intval($param['idingreso'] ?? 0);
+
+if($idingreso <= 0) {
+    responder(422, 'Se requiere el parámetro "ingreso".');
+}
 
 if (empty($evento)) {
     responder(422, 'Se requiere el parámetro "evento".');
@@ -54,8 +59,9 @@ if(!empty($nombre) && !empty($costura)) {
     $insertciclo["usuario_nombre"] = $nombre;
     $insertciclo["usuario_registra"] = $usuario;
     $insertciclo['costua_id'] = $costura;
+    $insertciclo['ingreso_id'] = $idingreso;
 
-    $sql = "INSERT INTO ciclo (costua_id, usuario_nombre, usuario_registra) VALUES (".$insertciclo['costua_id'].", '".$insertciclo['usuario_nombre']."', '".$insertciclo['usuario_registra']."')";    
+    $sql = "INSERT INTO ciclo (costua_id, ingreso_id, usuario_nombre, usuario_registra) VALUES (".$insertciclo['costua_id'].", $idingreso, '".$insertciclo['usuario_nombre']."', '".$insertciclo['usuario_registra']."')";    
     sc_exec_sql($sql);
 }
 

@@ -44,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const timerDisplayPrincipal = document.getElementById('timerDisplay')
     const bgContBtnPrincipal = document.getElementById('btns')    
     const problemaid = document.getElementById('problemaid')
+    const idingreso = parseInt(document.getElementById("idingreso").value) || 0
 
     //Variables necesarias
     parseInt(document.getElementById("ciclo_id").value, 10)
@@ -106,7 +107,8 @@ document.addEventListener('DOMContentLoaded', () => {
             soporteid,
             costuraid,
             nombre,
-            usuario
+            usuario,
+            idingreso
         }
 
         saveSoporte('save_evento_soporte', payload)

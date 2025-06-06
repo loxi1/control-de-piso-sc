@@ -32,6 +32,7 @@ $tiatencion = !empty($param['tiatencion']) ? $param['tiatencion'] : null;
 $tfatencion = !empty($param['tfatencion']) ? $param['tfatencion'] : null;
 $cicloid = !empty($param['cicloid']) ? $param['cicloid'] : null;
 $tipo = $param['tipo'] ?? 0;
+$idingreso = intval($param['idingreso'] ?? 0);
 
 if (empty($soporte)) {
     responder(422, 'Se requiere el parámetro "soporte".');
@@ -48,6 +49,7 @@ if(!empty($tiatencion)) {
     $updsoporte["tiempo_inicio_atencion"] = "NOW()";
     $updsoporte["tiempo_inicio_atencion_mec"] = "NOW()";
     $updsoporte["tiempo_fin_aceptacion"] = "NOW()";
+    $updsoporte["estado"] = "4";
 }
 
 if(!empty($usuario)) {
@@ -86,7 +88,7 @@ if(!empty($cicloid) && !empty($tfatencion) && !empty($usuario) && !empty($tipo))
 }
 
 if(!empty($insertciclo)) {
-    $sql = "INSERT INTO ciclo (costua_id, tiempo_inicio, usuario_nombre, usuario_registra) VALUES (".$insertciclo['costua_id'].", NOW(), '".$insertciclo['usuario_nombre']."', '".$insertciclo['usuario_registra']."')";    
+    $sql = "INSERT INTO ciclo (costua_id, ingreso_id, tiempo_inicio, usuario_nombre, usuario_registra) VALUES (".$insertciclo['costua_id'].",$idingreso, NOW(), '".$insertciclo['usuario_nombre']."', '".$insertciclo['usuario_registra']."')";    
     sc_exec_sql($sql);
 }
 

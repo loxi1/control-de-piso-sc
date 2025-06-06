@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const costura = parseInt(document.getElementById("costura_id").value) || 0
     const nombre = document.querySelector('input[name="nombre_usuario"]').value
     const motivo_tipo = document.querySelector('input[name="motivo_tipo"]').value || 0
+    const idingreso = parseInt(document.getElementById("idingreso").value) || 0
 
     //Inicia el cronometro
     iniciar()
@@ -83,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (evento < 1 || ciclo < 1)
             return null      
 
-        await saveEvento("save_cerrar_evento_ciclo_normal", { costura, nombre, evento, ciclo, usuario, motivo_tipo })
+        await saveEvento("save_cerrar_evento_ciclo_normal", { idingreso, costura, nombre, evento, ciclo, usuario, motivo_tipo })
         loadingData(true)
 
         window.top.location.href = `${urlapi}blank_evento_costura/`;

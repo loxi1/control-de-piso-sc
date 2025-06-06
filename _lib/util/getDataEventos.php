@@ -8,7 +8,7 @@ function getEventos():string {
         // ✅ Insertar en MySQL
         $sql = "
             select codigo_motivo, motivo, tipo_actividad_id 
-            from motivo where caracteristica_id=5 and codigo_motivo<>0 order by orden asc;
+            from motivo where caracteristica_id=5 and codigo_motivo<>0 and visible=2 order by orden asc;
         ";
         
         $stmt = $connMysql->query($sql);

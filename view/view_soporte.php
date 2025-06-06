@@ -1,4 +1,5 @@
 <?php
+session_start();
 $base_url = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];
 $script_dir = dirname(dirname($_SERVER['REQUEST_URI'])); // sube 2 niveles
 $api = rtrim(rtrim($base_url . $script_dir, '/')).'/';
@@ -20,6 +21,8 @@ $tiempo_estimado = [vg_tiempo_estimado]; //Expresado en minutos
 $operario_avance_meta_dia = "20 / 270<br>10.7%";
 
 $linea_avance_meta_dia = "50 / 300<br>14.3%";
+
+$idingreso = intval($_SESSION["ingreso_id"] ?? 0);
 
 // CSS y JS de Bootstrap 5
 echo "<link rel='stylesheet' href='".sc_url_library("prj","bootstrap5","css/bootstrap.min.css")."' />";
@@ -117,6 +120,7 @@ echo <<<HTML
         <input type="hidden" name="problema" id="problema" value="$problema">
         <input type="hidden" name="mecanico" id="mecanico" value="$mecanico">
         <input type="hidden" name="nombre_usuario" id="nombre_usuario" value="$usuario_nombre">
+        <input type="hidden" name="idingreso" id="idingreso" value="$idingreso">
         <!-- Main Layout Structure -->
         <div class="layout-container">
             <!-- Header Information -->

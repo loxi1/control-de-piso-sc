@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const costura = parseInt(document.getElementById("costura_id").value)
     const op = parseInt(document.getElementById("es_op")?.value) || 0
     const linea = document.getElementById("linea").value.trim() || ""
+    const idingreso = parseInt(document.getElementById("idingreso").value) || 0
     
     //Formatear el tiempo
     function formatTime(totalSeconds) {
@@ -91,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             termiarOperacion(estado)
         }
-        direccionar('app_Login_costura')
+        direccionar('blank_login_operario')
     })
     
     // Atras
@@ -155,7 +156,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const result = await Swal.fire({
             title: "¿Está seguro?",
             text: "Descartar operación Iniciada!",
-            icon: "warning",
+            icon: "question",
+            showCancelButton: true,
+            allowOutsideClick: false,
             showCancelButton: true,
             confirmButtonColor: "#3085d6",
             cancelButtonColor: "#d33",
@@ -164,13 +167,38 @@ document.addEventListener('DOMContentLoaded', () => {
         })
 
         if (result.isConfirmed) {
-            const elevento = await saveCicloEvento('save_evento_ciclo_normal', { costura, ciclo, motivo, nombre, usuario, tipo, op, linea })
+            if (tipo != 52) {
+                const elevento = await saveCicloEvento('save_evento_ciclo_normal', { costura, ciclo, motivo, nombre, usuario, tipo, op, linea })
 
-            if (elevento > 0) {
-                metodoGet("save_costura_datos", `usuario=${usuario}&linea=${linea}&costura=${costura}&op=${op}`)
-                loadingData(true)
-                const sendUrl = buildRedirectionUrl(tipo)
-                direccionar(sendUrl)
+                if (elevento > 0) {
+                    metodoGet("save_costura_datos", `usuario=${usuario}&linea=${linea}&costura=${costura}&op=${op}`)
+                    loadingData(true)
+                    const sendUrl = buildRedirectionUrl(tipo)
+                    direccionar(sendUrl)
+                }
+            } else {
+                const resultpermiso = await Swal.fire({
+                    title: "¿Es un permiso con retorno?",
+                    text: "Hoy volveras a trabajar?",
+                    icon: "question",
+                    showCancelButton: true,
+                    showCancelButton: true,
+                    allowOutsideClick: false,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Si, eliminar!",
+                    cancelButtonText: "No cancelar!"
+                })
+                // 1: No, 2: Sí
+                const con_permiso = 2
+                // 3: Permiso con retorno, volveré a trabajar, 4: Permiso sin retorno
+                const tipo_permiso =  (resultpermiso.isConfirmed) ? 3 : 4
+                tipo = 2 // 2: Permiso
+
+                payload = {con_permiso, tipo_permiso, tipo, idingreso}
+
+                //console.log("payload save permiso ->", payload);
+                const permiso = await endpoint('save_permiso', payload)
             }
         }
     })

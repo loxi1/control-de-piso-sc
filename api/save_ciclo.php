@@ -20,6 +20,7 @@ $costura = $param['costura'] ?? null;
 $ciclo   = (int)($param['ciclo'] ?? 0);
 $usuario = $param['usuario'] ?? null;
 $nombre = $param['nombre'] ?? null;
+$idingreso = intval($param['idingreso'] ?? 0);
 
 if (empty($costura)) {
     responder(422, 'Se requiere el parámetro "costura".');
@@ -27,6 +28,10 @@ if (empty($costura)) {
 
 if (empty($usuario)) {
     responder(422, 'Se requiere el parámetro "usuario".');
+}
+
+if ($idingreso <= 0) {
+    responder(422, 'Se requiere el parámetro "idingreso" válido.');
 }
 
 // 🔄 Si hay ciclo, solo actualiza
@@ -53,6 +58,7 @@ if ($ciclo > 0) {
 $insert['costua_id'] = (int)$costura;
 $insert['usuario_registra'] = $usuario;
 $insert['usuario_nombre'] = $nombre;
+$insert['ingreso_id'] = $idingreso;
 
 $sql = formarSqlInsert("ciclo", $insert);
 

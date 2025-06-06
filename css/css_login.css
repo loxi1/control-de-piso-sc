@@ -1,0 +1,93 @@
+body {
+    background: linear-gradient(135deg, #e9f0f5, #f9fbfd);
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.card-modern {
+    border: none;
+    border-radius: 2rem;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    background: white;
+}
+
+.svg-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(to right, #eef2f7, #f5f9ff);
+    padding: 2rem;
+}
+
+.svg-full {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: auto;
+}
+
+.fade-in-start {
+    opacity: 0;
+    transform: scale(0.95);
+    transition: opacity 1s ease-out, transform 1s ease-out;
+}
+
+.fade-in-show {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.form-label {
+    font-weight: 600;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    border: none;
+    border-radius: 1rem;
+}
+
+@media (max-width: 768px) {
+    .card-modern {
+        flex-direction: column !important;
+        /* Cambia a vertical */
+    }
+
+    .svg-container,
+    .card-modern>.col-md-6 {
+        width: 100% !important;
+        /* Fuerza el ancho completo */
+        max-width: 100% !important;
+        flex: 0 0 auto !important;
+        /* Desactiva comportamiento de columna fija */
+    }
+
+    .svg-full {
+        width: 50%;
+        /* Ajusta tamaño visual */
+        height: auto;
+        margin: 0 auto;
+        /* Centra el SVG */
+    }
+
+    .border-formulario {
+        border-right: 2px #f5f9ff solid;
+        border-bottom: 2px #f5f9ff solid;
+        border-left: 2px #f5f9ff solid
+    }
+
+    .form-focus {
+        position: relative;
+        top: -120px; /* Ajusta este valor según necesidad */
+        transition: top 0.3s ease;
+        z-index: 999;
+    }
+
+    .svg-focus {
+        position: relative;
+        top: -20px; /* Ajusta este valor según necesidad */
+        z-index: 999;
+        opacity: 0.5;
+        transition: opacity 0.3s ease-in-out;
+    }
+}
