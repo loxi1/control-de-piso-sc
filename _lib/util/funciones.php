@@ -40,7 +40,7 @@ function apiGet(string $url): ?array {
     return json_decode($response, true);
 }
 
-// ✅ Función auxiliar para extraer datos
+//✅ Función auxiliar para extraer datos
 function extraerDato(array $respuesta, string $clave): float {
     return (is_array($respuesta) && ($respuesta['code'] ?? 0) === 200 && isset($respuesta['data'][$clave]))
         ? floatval($respuesta['data'][$clave])

@@ -1,4 +1,5 @@
 <?php
+require_once('../_lib/util/session_check.php');
 header('Content-Type: application/json');
 
 function responder(int $code, string $msn, array $data = []): never {
@@ -62,6 +63,7 @@ if(!empty($rta_existe[0][0])) {
     $horario_minimo = strtotime($info[7]);
     $tiempo_trascurrido = intval($info[6] ?? 0);
     $estado = intval($info[8] ?? 0);
+    $_SESSION["ingreso_id"] = $id;
     
     if($fecha_actual > $horario_minimo && $fecha_actual < $horario_maximo) {
         $sql = "UPDATE ingreso  SET fecha_modificacion = NOW() WHERE id = $id";
@@ -110,10 +112,7 @@ $sql = "SELECT
     )
     FROM turno_horario tur
     WHERE tur.turno_id != horarios.turno_id and tur.empresa_id = $empresa
-      AND tur.numero_dia =  CASE 
-          WHEN horarios.numero_dia = 7 THEN 7
-          ELSE horarios.numero_dia - 1
-        END
+      tur.numero_dia = horarios.numero_dia
     LIMIT 1
   ) AS horario_minimo,
   
@@ -182,6 +181,7 @@ if (isset({rs_data_sybase}[0][0])) {
     }
 
     $msn = "Usuario ingresado correctamente.";
+    $_SESSION["ingreso_id"] = $id;
 }
 
 responder(200, $msn, $rta);

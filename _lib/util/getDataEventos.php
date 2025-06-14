@@ -1,5 +1,6 @@
 <?php
 require_once(__DIR__ . '/funciones.php');
+
 function getEventos():string {
     $btns = "<h1 class='text-center'>Crear eventos</h1>";
     try {

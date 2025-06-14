@@ -17,18 +17,18 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     responder(405, 'Método no permitido. Solo se acepta GET.');
 }
 
-$usuario = $_GET['usuario'] ?? null;
+$idingreso = $_GET['idingreso'] ?? null;
 
-if(empty($usuario)) {
+if(empty($idingreso)) {
     responder(422, 'Se requiere el parámetro "usuario".');
 }
 
-//$sql = "select TIMESTAMPDIFF(SECOND, tiempo_inicio, NOW()) as tiempo from ciclo where usuario_registra = '$usuario' and  DATE(fecha_creacion) = CURDATE() order by fecha_creacion asc limit 1";
-$sql = "SELECT TIMESTAMPDIFF(
-    SECOND,
-    STR_TO_DATE(CONCAT(CURDATE(), ' 08:00:00'), '%Y-%m-%d %H:%i:%s'),
-    NOW()
-) AS tiempo";
+$sql = "select TIMESTAMPDIFF(
+		SECOND,
+		fecha_permiso,
+	NOW()) AS tiempo
+	from permiso where ingreso_id=$idingreso and tipo='Ingreso' and estado=2";
+
 sc_lookup(rs_data_sybase, $sql);
 
 $tiempo_total_min = !empty({rs_data_sybase}[0][0]) ? floatval({rs_data_sybase}[0][0]) : 0; // Si no hay registros, usar 60 minutos como valor por defecto
@@ -43,8 +43,7 @@ $sql = "SELECT
     count(ci.ciclo_id) as cant
 FROM ciclo ci
 LEFT JOIN costura co ON co.costura_id = ci.costua_id
-WHERE ci.usuario_registra = '".$usuario."'
-  AND DATE(ci.fecha_creacion) = CURDATE()
+WHERE ci.ingreso_id = '".$idingreso."'
   AND motivo_id = 0 
   AND (ci.tiempo_trascurrido IS NOT NULL OR ci.tiempo_trascurrido <> '00:00:00')
   AND ci.estado_id = 1
@@ -53,7 +52,7 @@ GROUP BY co.operacion, co.tiempo_estimado_operacion";
 sc_lookup(rs_data_sybase, $sql);
 
 $eficiencia = 0;
-
+$cantidad = 0;
 if (isset({rs_data_sybase}[0][0])) {
     foreach ({rs_data_sybase} as $row) {
         $tiempo_estandar = floatval($row[1]);
@@ -61,12 +60,13 @@ if (isset({rs_data_sybase}[0][0])) {
 
         $valorobtenido = $tiempo_estandar*$cant;
         $eficiencia += $valorobtenido;
+		$cantidad +=$cant;
     }
 }
 
 $eficiencia = $eficiencia == 0 ? 0 : number_format((($eficiencia*100*60)/($tiempo_total_min)), 2, '.', '');
 
-$rta = ['eficiencia' => $eficiencia];
+$rta = ['eficiencia' => $eficiencia, 'cantidad'=>$cantidad];
 
 // ✅ Enviar respuesta JSON
 responder(200, 'Eficiencia obtenida correctamente.', $rta);

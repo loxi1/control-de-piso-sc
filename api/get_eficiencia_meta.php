@@ -1,4 +1,5 @@
 <?php
+require_once('../_lib/util/session_check.php');
 require_once('../_lib/util/funciones.php');
 function get_data_meta(array $param):float {
     $compania = "02";

@@ -3,38 +3,16 @@ $base_url = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];
 $script_dir = dirname($_SERVER['REQUEST_URI']); // sube 2 niveles
 $api = rtrim(rtrim($base_url . $script_dir, '/')) . '/';
 session_start();
-
-$codigo = $_GET['codigo'] ?? null;
-$id = intval($_GET['id'] ?? 0);
-if(!empty($codigo) && !empty($id)) {
-    $host = $_SERVER['REQUEST_SCHEME']."://".$_SERVER['HTTP_HOST'];
-    $urls = $_SERVER['REDIRECT_URL'];
-    $apix = $host.str_replace("app_Login_costura/index.php", "",$urls);
-    $sql = "SELECT nombres as datos from colaborador where cod_colaborador='$codigo'";
-    sc_lookup(rs_data_sybase, $sql);
-    $_SESSION["usr_login"]=$codigo;
-    $_SESSION["ingreso_id"]=$id;
-    if (!empty({rs_data_sybase}[0][0])) {
-        $_SESSION["usr_name"]={rs_data_sybase}[0][0];
-    }
-    $direciona = $apix."form_costura_operacion";
-    header("Location: $direciona/"); /* Redirección del navegador */
-    exit;
-}
-// CSS y JS de Bootstrap 5
-echo "<link rel='stylesheet' href='" . sc_url_library("prj", "bootstrap5", "css/bootstrap.min.css") . "' />";
-echo "<link rel='stylesheet' href='../_lib/css/sweetalert2.min.css' />";
-echo "<script src='" . sc_url_library("prj", "bootstrap5", "js/bootstrap.bundle.min.js") . "'></script>";
-echo "<script src='../_lib/js/js_login.js?rand=" . rand() . "'></script>";
-echo "<script src='../_lib/js/sweetalert2.all.min.js'></script>";
-echo "<link rel='stylesheet' href='../_lib/css/css_login.css' />";
-echo <<<HTML
+?>
 <!DOCTYPE html>
 <html lang="es">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Acceso al control de piso</title>
+        <link rel="stylesheet" href="../css/bootstrap.css" >
+        <link rel="stylesheet" href="../css/css_login.css" >
+        <link rel="icon" type="image/x-icon" href="../cofaco.svg">
     </head>
 
     <body class="d-flex align-items-center justify-content-center min-vh-100">
@@ -91,6 +69,6 @@ echo <<<HTML
             if (svg) svg.classList.add("fade-in-show");
             });
         </script>
+        <script src="../js/js_login.js"></script>
     </body>
 </html>
-HTML;

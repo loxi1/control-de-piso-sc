@@ -1,4 +1,5 @@
 <?php
+require_once('../_lib/util/session_check.php');
 require_once('../_lib/util/funciones.php');
 //date_default_timezone_set('America/New_York');
 $datetime = new DateTime();

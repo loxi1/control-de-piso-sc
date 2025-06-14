@@ -1,4 +1,5 @@
 <?php
+require_once('../_lib/util/session_check.php');
 header('Content-Type: application/json');
 
 function responder(int $code, string $msn, array $data = []): never {
@@ -40,5 +41,8 @@ $rta = [];
 $rta['codigo'] = {rs_data_sybase}[0][0] ?? null;
 $rta['datos'] = {rs_data_sybase}[0][1] ?? null;
 $rta['empresa_id'] = {rs_data_sybase}[0][2] ?? null;
+
+$_SESSION["usr_login"] = $rta['codigo'];
+$_SESSION["usr_name"] = $rta['datos'];
 
 responder(200, 'Operario encontrado.', $rta);

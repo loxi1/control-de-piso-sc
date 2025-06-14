@@ -10,9 +10,9 @@ document.addEventListener('DOMContentLoaded', () => {
             container.classList.add("form-focus")
         })
 
-        inputCodigo.addEventListener("blur", () => {
+        /*inputCodigo.addEventListener("blur", () => {
             container.classList.remove("form-focus")
-        })
+        })*/
     }
 
     //Funcion para activar y desactivar el preload
@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         //console.log("payload save permiso ->", payload);
         const permiso = await endpoint('save_permiso', payload)
-        direccionar(`blank_login_operario/?codigo=${codigo}&id=${validaTurno.data.id}`);
+        direccionar(`app_Login_costura/?codigo=${codigo}&id=${validaTurno.data.id}`);
     })
 
     // Función para enviar al endpoint

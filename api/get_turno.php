@@ -1,4 +1,5 @@
 <?php
+require_once('../_lib/util/session_check.php');
 header('Content-Type: application/json');
 
 function responder(int $code, string $msn, array $data = []): never {
@@ -33,10 +34,7 @@ $sql = "SELECT
                 )
                 FROM turno_horario tur
                 WHERE tur.turno_id != horarios.turno_id
-                AND tur.numero_dia =  CASE 
-                    WHEN horarios.numero_dia = 7 THEN 7
-                    ELSE horarios.numero_dia - 1
-                    END
+                AND tur.numero_dia = horarios.numero_dia
                 LIMIT 1
             ) AS horario_minimo,
             

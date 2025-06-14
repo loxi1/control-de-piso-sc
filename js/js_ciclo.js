@@ -1,16 +1,16 @@
 document.addEventListener('DOMContentLoaded', () => {
     //Obtener la url del API
     const urlapi = document.querySelector('input[name="api"]').value
-    
+
     //Funcion para activar y desactivar el preload
     const loadingData = (estado) => {
         const loading = document.querySelector("#preloader")
         document.body.style.overflow = estado ? "hidden" : "auto"
 
-        if (estado) 
+        if (estado)
             loading.classList.remove("d-none")
         else
-            loading.classList.add("d-none")    
+            loading.classList.add("d-none")
     }
 
     // Variables para el temporizador
@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const op = parseInt(document.getElementById("es_op")?.value) || 0
     const linea = document.getElementById("linea").value.trim() || ""
     const idingreso = parseInt(document.getElementById("idingreso").value) || 0
-    
+
     //Formatear el tiempo
     function formatTime(totalSeconds) {
         const hours = Math.floor(totalSeconds / 3600)
@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
     //Salir
     btnsalir.addEventListener('click', async function () {
         const ncicloid = await getSalirApp()
-        if(ncicloid > 0) {
+        if (ncicloid > 0) {
             document.getElementById("ciclo_id").value = ncicloid
             const result = await Swal.fire({ // Espera el resultado de la confirmación
                 title: "¿Desea eliminar esta operación?",
@@ -88,18 +88,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 cancelButtonText: "No cancelar!"
             })
 
-            let estado = (result.isConfirmed) ? 3 :2
+            let estado = (result.isConfirmed) ? 3 : 2
 
             termiarOperacion(estado)
         }
-        direccionar('blank_login_operario')
+        direccionar('app_Login_costura')
     })
-    
+
     // Atras
     btnatras.addEventListener('click', async function () {
         const ncicloid = await getSalirApp()
 
-        if(ncicloid > 0) 
+        if (ncicloid > 0)
             await termiarOperacion(0)
         const param = costura > 0 ? `?id=${costura}` : ""
         direccionar(`form_costura_operacion/${param}`)
@@ -121,7 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
         bgcontbtn.classList.add('bg-finalizar')
         bgcontbtn.classList.remove('bg-inicio')
     }
-    
+
     //Parar el conteo
     function parar() {
         isRunning = false
@@ -145,13 +145,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const tipo = parseInt(button.getAttribute('tipo'))
         const motivo = parseInt(button.getAttribute('motivoid'))
-        const ciclo = parseInt(document.getElementById("ciclo_id").value)   
+        const ciclo = parseInt(document.getElementById("ciclo_id").value)
 
-        if (isNaN(tipo)) return        
+        if (isNaN(tipo)) return
 
         if (ciclo > 0 && !isNaN(ciclo)) {
             await saveCiclo("save_cerrar_ciclo", { ciclo, estado: 1, tipo, usuario })
-        }            
+        }
 
         const result = await Swal.fire({
             title: "¿Está seguro?",
@@ -192,10 +192,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 1: No, 2: Sí
                 const con_permiso = 2
                 // 3: Permiso con retorno, volveré a trabajar, 4: Permiso sin retorno
-                const tipo_permiso =  (resultpermiso.isConfirmed) ? 3 : 4
+                const tipo_permiso = (resultpermiso.isConfirmed) ? 3 : 4
                 tipo = 2 // 2: Permiso
 
-                payload = {con_permiso, tipo_permiso, tipo, idingreso}
+                payload = { con_permiso, tipo_permiso, tipo, idingreso }
 
                 //console.log("payload save permiso ->", payload);
                 const permiso = await endpoint('save_permiso', payload)
@@ -206,11 +206,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Función para guardar el ciclo
     async function saveCiclo(metodo, payload = {}) {
         const url = `${urlapi}${metodo}/?nmgp_outra_jan=true`
-    
+
         try {
             const data = await postJSON(url, payload)
             if (data.code === 200) {
-                if(metodo === "save_ciclo")
+                if (metodo === "save_ciclo")
                     document.getElementById("ciclo_id").value = data.data.ciclo
             } else {
                 document.getElementById("ciclo_id").value = 0
@@ -219,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Error al guardar ciclo:", error)
         }
     }
-    
+
     // Función para guardar el evento ciclo
     async function saveCicloEvento(metodo, payload = {}) {
         const url = `${urlapi}${metodo}/?nmgp_outra_jan=true`
@@ -252,14 +252,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Puedes repetirlo cada 5 minutos si deseas: setInterval(() => actualizarTiempos(usuarioid), 5 * 60 * 1000)
     async function actualizarTiempos() {
-        const data = await metodoGet('get_tiempo_improductivo',`usuario=${usuario}`)
+        const data = await metodoGet('get_tiempo_improductivo', `usuario=${usuario}`)
         if (data) {
             // Actualizar los valores en el DOM
             document.getElementById("timp").textContent = data.timp
             document.getElementById("pimp").textContent = data.pimp
         }
     }
-    
+
     // Ejecutar cada 3 minutos (180,000 ms)
     //setInterval(actualizarEficiencia, 3 * 60 * 1000)
 
@@ -268,7 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function actualizarEficiencia() {
         porcentajeficiencia.value = 0
-        const data = await metodoGet('get_eficiencia_x_hora',`usuario=${usuario}`, false)
+        const data = await metodoGet('get_eficiencia_x_hora', `usuario=${usuario}`, false)
         if (data) {
             let valorNumerico = data.eficiencia
             let eficiencia = `${valorNumerico}%`
@@ -282,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
     getReproceso()
     // Función para obtener datos de los reprocesos
     async function getReproceso() {
-        const data = await metodoGet('get_reprocesos',`usuario=${usuario}`)
+        const data = await metodoGet('get_reprocesos', `usuario=${usuario}`)
         if (data) {
             // Actualizar los valores en el DOM
             reprocesos.textContent = data.reprocesos
@@ -291,7 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Función para validar si existe una operación a eliminar
     async function getSalirApp() {
-        const data = await metodoGet('get_salir_app',`usuario=${usuario}`)
+        const data = await metodoGet('get_salir_app', `usuario=${usuario}`)
         if (!data || typeof data.ciclo_id === 'undefined' || data.ciclo_id === null) {
             return 0 // o cualquier valor por defecto que prefieras
         }
@@ -303,7 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let payload = { ciclo, usuario }
 
         estado = parseInt(estado)
-        if(estado > 0)
+        if (estado > 0)
             payload.estado = estado
 
         await saveCiclo("save_cerrar_ciclo", payload)
@@ -335,7 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function mostrarPorcentajeDeMetas() {
         let porcentaje = 0;
-        porcentameta.value  = porcentaje.toFixed(2)
+        porcentameta.value = porcentaje.toFixed(2)
 
         try {
             const numTimbrados = await getTimbradasxDia();
@@ -345,8 +345,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const indicador = document.getElementById("indicator-value");
             if (indicador) {
-                indicador.innerHTML  = `${numTimbrados} / ${numMeta}<br>${porcentaje.toFixed(2)} %`
-                porcentameta.value  = porcentaje.toFixed(2)
+                indicador.innerHTML = `${numTimbrados} / ${numMeta}<br>${porcentaje.toFixed(2)} %`
+                porcentameta.value = porcentaje.toFixed(2)
             } else {
                 console.warn("Elemento con ID 'indicator-value' no encontrado.")
             }
@@ -385,7 +385,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 btn.setAttribute("motivoid", item.id)
                 btn.setAttribute("tipo", item.tipo)
                 btn.innerHTML = formatearTexto(item.motivo)
-                
+
                 contbtn.appendChild(btn)
             })
         } else {
@@ -404,7 +404,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             return data.code === 200 ? data.data : null
         } catch (error) {
-            return null          
+            return null
         } finally {
             if (mostrarLoader) loadingData(false);
         }

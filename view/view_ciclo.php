@@ -1,7 +1,21 @@
 <?php
-require_once('../_lib/util/getDataEventos.php');
+require_once(__DIR__ . '/conexion.php');
 $costura_id = [vg_costura_id];
 session_start();
+
+$aray_uri = explode("/", $_SERVER['REQUEST_URI']);
+array_pop($aray_uri); // Eliminar el último elemento (nombre del archivo)
+array_pop($aray_uri);
+array_push($aray_uri, "");
+$uri = implode("/", $aray_uri);
+
+$api = $_SERVER['REQUEST_SCHEME'] . "://" . $_SERVER['HTTP_HOST'] . $uri;
+$idingreso = intval($_SESSION["ingreso_id"] ?? 0);
+if(!$idingreso) {
+    $direciona = $api."/app_Login_costura";
+    header("Location: $direciona"); /* Redirección del navegador */
+    exit;
+}
 
 $op = [vg_op];
 
@@ -17,17 +31,7 @@ $usuario_nombre = [usr_name];
 
 $tiempo_estimado = [vg_tiempo_estimado]; //Expresado en minutos
 $tiempo_es = !empty($tiempo_estimado) ? number_format($tiempo_estimado, 2, '.', '') : "0.00";
-$linea_avance_meta_dia = "50 / 300<br>14.3%";
-
-$idingreso = intval($_SESSION["ingreso_id"] ?? 0);
-
-$aray_uri = explode("/", $_SERVER['REQUEST_URI']);
-array_pop($aray_uri); // Eliminar el último elemento (nombre del archivo)
-array_pop($aray_uri);
-array_push($aray_uri, "");
-$uri = implode("/", $aray_uri);
-
-$api = $_SERVER['REQUEST_SCHEME'] . "://" . $_SERVER['HTTP_HOST'] . $uri;
+$linea_avance_meta_dia = "";
 
 // CSS y JS de Bootstrap 5
 echo "<link rel='stylesheet' href='" . sc_url_library("prj", "bootstrap5", "css/bootstrap.min.css") . "' />";
@@ -94,6 +98,7 @@ echo <<<HTML
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Costura</title>
+        <link rel="icon" type="image/x-icon" href="/cofaco.svg">
     </head>
 
     <body>

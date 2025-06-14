@@ -1,4 +1,5 @@
 <?php
+require_once('../_lib/util/session_check.php');
 header('Content-Type: application/json');
 
 /**

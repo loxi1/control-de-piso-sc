@@ -1,26 +1,16 @@
 <?php
+require_once('../_lib/util/session_check.php');
+require_once('../_lib/util/util.php');
 header('Content-Type: application/json');
-
-function responder(int $code, string $msn, array $data = []): never {
-    http_response_code($code);
-    echo json_encode([
-        'code' => $code,
-        'msn'  => $msn,
-        'data' => $data
-    ]);
-    exit;
-}
 
 // ✅ Validar método HTTP
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     responder(405, 'Método no permitido. Solo se acepta GET.');
 }
 
-$usuario = $_GET['usuario'] ?? null;
+$idingreso = intval($_SESSION['ingreso_id'] ?? 0);
 
-if(empty($usuario)) {
-    responder(422, 'Se requiere el parámetro "usuario".');
-}
+if(!$idingreso)  responder(422, 'Se requiere el parámetro "ingreso.');
 
 $sql = "SELECT ciclo_id, estado_id, ci.tiempo_trascurrido, ci.tiempo_fin
 FROM ciclo ci
@@ -44,5 +34,13 @@ if (!empty({rs_data_sybase}[0])) {
     }
 }
 
+$conn = DB::getConnection();
+//select TIMESTAMPDIFF(SECOND, horario_salida, NOW()) tiempo from ingreso where id=62
+$cerrar = listarTablaSimple("ingreso", ['id' => $idingreso], $conn,['TIMESTAMPDIFF(SECOND, horario_salida, NOW()) tiempo']);
+$cerrarsession = intval($cerrar[0]['tiempo'] ?? 0);
+
+$rta['cerrarsession'] = $cerrarsession > 0 ? true : false;
+
+DB::closeConnection();
 // ✅ Enviar respuesta JSON
 responder(200, 'Cerrar operacion.', $rta);

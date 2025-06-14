@@ -1,5 +1,5 @@
 <?php
-
+require_once('../_lib/util/session_check.php');
 header('Content-Type: application/json');
 
 function responder(int $code, string $msn, array $data = []): never {

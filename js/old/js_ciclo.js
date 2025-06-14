@@ -69,7 +69,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     //Salir
     btnsalir.addEventListener('click', async function () {
-        const ncicloid = await getSalirApp()
+        const vaSalir = await getSalirApp()
+        const ncicloid = parseInt(vaSalir.ciclo_id) || 0
+        const cerrar = vaSalir.cerrarsession
+
         if(ncicloid > 0) {
             document.getElementById("ciclo_id").value = ncicloid
             const result = await Swal.fire({ // Espera el resultado de la confirmación
@@ -89,15 +92,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
             termiarOperacion(estado)
         }
-        direccionar('blank_login_operario')
+
+        if (cerrar) {
+            const rtasalir = await Swal.fire({ // Espera el resultado de la confirmación
+                title: "¿Finalizó su jornada laboral?",
+                text: "Está a punto de cerrar sesión. ¿Desea confirmar que ha terminado por hoy?",
+                icon: "warning",
+                showCancelButton: true,
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Sí, he terminado",
+                cancelButtonText: "No, continuaré trabajando"
+            })
+
+            if (rtasalir.isConfirmed) {
+                const con_permiso = 1            // 1: No, 2: Sí        
+                const tipo_permiso = 6          // 6: Salida
+                const tipo = 3                 // 3: Salida
+
+                payload = { con_permiso, tipo_permiso, tipo }
+                payload.codigo = usuario
+                payload.id = idingreso
+                console.log("payload save permiso ->", payload);
+                const permiso = await saveCiclo('save_registro_permiso', payload)
+            } else {
+                await saveCiclo('logout', {})
+            }
+        }
+        direccionar('app_Login_costura')
     })
     
     // Atras
     btnatras.addEventListener('click', async function () {
-        const ncicloid = await getSalirApp()
+        const vaSalir = await getSalirApp()
+        const ncicloid = parseInt(vaSalir.ciclo_id) || 0
 
         if(ncicloid > 0) 
             await termiarOperacion(3)
+
         const param = costura > 0 ? `?id=${costura}` : ""
         direccionar(`form_costura_operacion/${param}`)
     })
@@ -140,21 +174,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const button = e.target.closest('.event-btn')
         if (!button) return // No es un botón válido
 
-        const tipo = parseInt(button.getAttribute('tipo'))
+        let tipoEvento = Math.max(parseInt(button.getAttribute('tipo')) || 0, 0)
         const motivo = parseInt(button.getAttribute('motivoid'))
-        const ciclo = parseInt(document.getElementById("ciclo_id").value)   
+        const ciclo = parseInt(document.getElementById("ciclo_id").value)  
 
-        if (isNaN(tipo) || tipo == 52 ) return
+        if (!tipoEvento) return
 
         await mostrarPorcentajeDeMetas()
-
-        //let meta = parseFloat(porcentameta.value)
-        //let eficiencia = parseFloat(porcentajeficiencia.value)
-        //let reproceso = parseInt(reprocesos.textContent) || 0
-
-       if (ciclo > 0 && !isNaN(ciclo)) {
-            await saveCiclo("save_cerrar_ciclo", { ciclo, estado: 1, tipo, usuario })
-        } 
+      
+        let esevento = (tipoEvento == 52 || tipoEvento == 51) ? false : true
 
         const result = await Swal.fire({
             title: "¿Está seguro?",
@@ -170,12 +198,50 @@ document.addEventListener('DOMContentLoaded', () => {
         })
 
         if (result.isConfirmed) {
-            await saveCicloEvento('save_evento_ciclo_normal', { idingreso, costura, ciclo, motivo, nombre, usuario, tipo })
-            Swal.fire({
-                title: "Eliminado!",
-                text: "Esta direccionando al soporte.",
-                icon: "success"
-            })
+            if (ciclo > 0 && !isNaN(ciclo)) {
+                await saveCiclo("save_cerrar_ciclo", { ciclo, estado: 1, tipo: tipoEvento , usuario })
+            }
+
+            if (esevento) {
+                await saveCicloEvento('save_evento_ciclo_normal', { idingreso, costura, ciclo, motivo, nombre, usuario, tipo: tipoEvento })
+                Swal.fire({
+                    title: "Eliminado!",
+                    text: "Esta direccionando al soporte.",
+                    icon: "success"
+                })
+                return
+            }
+            // Permiso con refrierio
+            let tipo_permiso = 5
+            //Tipo Ingreso
+            tipo = 2
+            
+            // 1: No, 2: Sí
+            const con_permiso = 2
+
+            if (tipoEvento == 52) {
+                const resultpermiso = await Swal.fire({
+                    title: "¿El permiso incluye retorno?",
+                    text: "Confírmanos si volverás a trabajar hoy o si será una salida definitiva por el día.",
+                    icon: "question",
+                    showCancelButton: true,
+                    showCancelButton: true,
+                    allowOutsideClick: false,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Si, regresaré",
+                    cancelButtonText: "No, saldré por hoy"
+                })
+                // 3: Permiso con retorno, volveré a trabajar, 4: Permiso sin retorno
+                tipo_permiso = (resultpermiso.isConfirmed) ? 3 : 4
+                tipo = tipo_permiso == 3 ? 2 : 3 // 2: Permiso y 3: Salida
+            }
+
+            payload = { con_permiso, tipo_permiso, tipo }
+            payload.codigo = usuario
+            payload.id = idingreso
+            const permiso = await saveCiclo('save_registro_permiso', payload)
+            //direccionar('app_Login_costura')
         }
     })
 
@@ -248,7 +314,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // También puedes llamar una vez al cargar la página si es necesario
     actualizarEficiencia()
+
     document.getElementById("eficienciaxcolaborador").textContent = "0.00%"
+
     async function actualizarEficiencia() {
         const data = await metodoGet('get_eficiencia_x_hora',`idingreso=${idingreso}`, false)
         if (data) {            
@@ -273,9 +341,9 @@ document.addEventListener('DOMContentLoaded', () => {
     async function getSalirApp() {
         const data = await metodoGet('get_salir_app',`usuario=${usuario}`)
         if (!data || typeof data.ciclo_id === 'undefined' || data.ciclo_id === null) {
-            return 0 // o cualquier valor por defecto que prefieras
+            return { "ciclo_id": 0, "cerrarsession": false} // o cualquier valor por defecto que prefieras
         }
-        return data.ciclo_id
+        return data
     }
 
     async function termiarOperacion(estado) {
@@ -384,8 +452,14 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             if (mostrarLoader) loadingData(true);
             const response = await fetch(url)
-            const data = await response.json()
 
+            if (response.status === 401 || response.status === 403) {
+                direccionar('app_Login_costura')
+                return { code: 401, msn: "Sesión expirada", data: null }
+            }
+
+            const data = await response.json()
+            
             return data.code === 200 ? data.data : null
         } catch (error) {
             return null          
@@ -405,6 +479,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: JSON.stringify(data)
             })
+
+            if (response.status === 401 || response.status === 403) {
+                direccionar('app_Login_costura')
+                return { code: 401, msn: "Sesión expirada", data: null }
+            }
+
             return await response.json()
         } catch (error) {
             return { code: 500, msn: "Error en fetch", data: null }

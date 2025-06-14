@@ -136,6 +136,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: JSON.stringify(data)
             })
+            
+            if (response.status === 401 || response.status === 403) {
+                direccionar('app_Login_costura')
+                return { code: 401, msn: "Sesión expirada", data: null }
+            }
+
             return await response.json()
         } catch (error) {
             return { code: 500, msn: "Error en fetch", data: null }
@@ -152,6 +158,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(url)
             const data = await response.json()
 
+            if (response.status === 401 || response.status === 403) {
+                direccionar('app_Login_costura')
+                return { code: 401, msn: "Sesión expirada", data: null }
+            }
             return data.code === 200 ? data.data : null
 
         } catch (error) {
