@@ -88,7 +88,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Iniciar/Parar temporizador principal
-    function toggleTimerPrincipal() {
+    function toggleTimerPrincipal() {        
+        const problemaSeleccionado = obtenerProblema();
+
+        if (problemaSeleccionado === null) {
+            Swal.fire("¡Ups..!", "Seleccione el problema.", "error");
+            return;
+        }
+
         if (!isRunningPrincipal) {
             iniciarTemporizadorPrincipal()
         } else {
@@ -128,6 +135,14 @@ document.addEventListener('DOMContentLoaded', () => {
         bgContBtnPrincipal.classList.remove('bg-inicio')
     }
 
+    function obtenerProblema() {
+        const problemaValor = parseInt(problemaid.value, 10);
+        if (isNaN(problemaValor) || problemaValor <= 0) { // Considera 0 o NaN como inválido
+            return null;
+        }
+        return problemaValor;
+    }
+
     //Iniciar crometro del mecánico
     function pararTemporizadorPrincipal() {
         isRunningPrincipal = false
@@ -145,7 +160,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Iniciar/Parar temporizador mecánico
-    function toggleTimerMecanico() {
+    function toggleTimerMecanico() {        
+        const problemaSeleccionado = obtenerProblema();
+
+        if (problemaSeleccionado === null) {
+            Swal.fire("¡Ups..!", "Seleccione el problema.", "error");
+            return;
+        }
+
         if (!isRunningMecanico) {
             iniciarTemporizadorMecanico()         
             btnInicioMecanico.style.display = 'none' // Ocultar el boton del mecanico

@@ -39,6 +39,7 @@ function calcularEficienciaOnline(array $param, PDO $conn): ?array {
                 $eficiencia += $valorobtenido;
                 $cantidad += $cant;
             }
+            $eficiencia = $eficiencia >= 0 ? $eficiencia : 0;
             $eficiencia = ($eficiencia == 0) ? 0 : number_format(($eficiencia*6000/$tiempotranscurrido), 2, '.', '');
         }
         

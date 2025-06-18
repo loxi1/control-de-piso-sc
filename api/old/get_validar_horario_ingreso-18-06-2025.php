@@ -1,5 +1,5 @@
 <?php
-require_once('../_lib/util/session_check.php');
+session_start();
 header('Content-Type: application/json');
 
 function responder(int $code, string $msn, array $data = []): never {
@@ -27,18 +27,15 @@ if (json_last_error() !== JSON_ERROR_NONE) {
 
 $codigo = $param['codigo'] ?? null;
 $turno = $param['turno'] ?? null;
-$empresa = intval($param['empresa'] ?? 0);
 
 if (empty($codigo)) {
     responder(422, 'Se requiere el parámetro "codigo".');
 }
+
 if (empty($turno)) {
     responder(422, 'Se requiere el parámetro "turno".');
 }
 
-if($empresa <= 0) {
-    responder(422, 'Se requiere el parámetro "empresa".');
-}
 
 $existe = "select id, turno_id, horario_ingreso, horario_salida, now() fecha_actual,
 horario_maximo, TIMESTAMPDIFF(SECOND, horario_ingreso, NOW()) AS tiempo_trascurrido, horario_minimo, estado, hora_limite_refrigerio, refrigerio_aplicado 
@@ -63,11 +60,11 @@ if(!empty($rta_existe[0][0])) {
     $horario_minimo = strtotime($info[7]);
     $tiempo_trascurrido = intval($info[6] ?? 0);
     $estado = intval($info[8] ?? 0);
-    
-    $hora_limite_refrigerio = $info[9] ?? '';
+	
+	$hora_limite_refrigerio = $info[9] ?? '';
     $hora_limite_refrigerio = isset($info[9]) && $info[9] !== '' ? strtotime($info[9]) : null;
 
-    $refrigerio_aplicado = intval($info[10] ?? 0);
+    $refrigerio_aplicado = intval($info[10] ?? 0);	
     
     if($fecha_actual > $horario_minimo && $fecha_actual < $horario_maximo) {
         $sql = "UPDATE ingreso  SET fecha_modificacion = NOW() WHERE id = $id";
@@ -84,11 +81,11 @@ if(!empty($rta_existe[0][0])) {
             $rta['titulo'] = "¿Tiene Permiso?";
             $rta['descripcion'] = "!Estas ingresando tarde¡ Turno: ".date('h:i A', $horario_ingreso)." - ".date('h:i A', $horario_salida);
         }
-        
-        $_SESSION["ingreso_id"] = $id;
-        $_SESSION["hora_limite_refrigerio"] = $hora_limite_refrigerio;
-        $_SESSION["refrigerio_aplicado"] = $refrigerio_aplicado;
-
+		
+		$_SESSION["ingreso_id"] = $id;
+		$_SESSION["hora_limite_refrigerio"] = $hora_limite_refrigerio;    
+		$_SESSION["refrigerio_aplicado"] = $refrigerio_aplicado;
+		
         responder(200, $msn, $rta);
     } else {
         // Registro anterior que no fue cerrado. Se debe calcular la eficiencia
@@ -103,55 +100,66 @@ if(!empty($rta_existe[0][0])) {
 }
 
 $sql = "SELECT
-  id,
-  numero_dia,
-  turno_id,
-  considerar_almuerzo_min,
-  ingreso AS horario_ingreso,
-  salida AS horario_salida,
-  TIMESTAMPDIFF(SECOND, ingreso, NOW()) AS tiempo_trascurrido,
-  DAYOFWEEK(ingreso) AS dia,
-
-  -- Hora fin del turno anterior (turno diferente, dia anterior)
-  (
-    SELECT TIMESTAMP(
-      DATE(horarios.ingreso), 
-      TIME(tur.hora_fin)
-    )
-    FROM turno_horario tur
-    WHERE tur.turno_id != horarios.turno_id and tur.empresa_id = $empresa
-      tur.numero_dia = horarios.numero_dia
-    LIMIT 1
-  ) AS horario_minimo,
-  
-  -- Hora inicio del otro turno del mismo día
-  (
-    SELECT TIMESTAMP(DATE(horarios.salida), TIME(tur.hora_inicio))
-    FROM turno_horario tur
-    WHERE tur.turno_id != horarios.turno_id and tur.empresa_id = $empresa
-      AND tur.numero_dia = horarios.numero_dia
-    LIMIT 1
-  ) AS horario_maximo
-  ,hora_limite_almuerzo
-
-FROM (
-  SELECT
     id,
     numero_dia,
     turno_id,
     considerar_almuerzo_min,
-    TIMESTAMP(CURDATE(), TIME(hora_inicio)) AS ingreso,
-    TIMESTAMP(
-      DATE_ADD(CURDATE(), INTERVAL DATEDIFF(hora_fin, hora_inicio) DAY),
-      TIME(hora_fin)
-    ) AS salida
+    ingreso AS horario_ingreso,
+    salida AS horario_salida,
+    TIMESTAMPDIFF(SECOND, ingreso, NOW()) AS tiempo_trascurrido,
+    DAYOFWEEK(ingreso) AS dia,
+    -- Hora fin del turno anterior (turno diferente, dia anterior)
+    (
+        SELECT TIMESTAMP(
+        DATE(horarios.ingreso), 
+        TIME(tur.hora_fin)
+        )
+        FROM turno_horario tur
+        WHERE tur.turno_id != horarios.turno_id
+        AND tur.numero_dia = (
+            CASE 
+                WHEN horarios.numero_dia = 7 AND tur.turno_id = 2 THEN
+                    CASE WHEN horarios.numero_dia - 1 = 0 THEN 7 ELSE horarios.numero_dia - 1 END
+                ELSE horarios.numero_dia
+            END
+        )
+        LIMIT 1
+    ) AS horario_minimo,
+
+    -- Hora inicio del otro turno del mismo día
+    (
+        SELECT TIMESTAMP(DATE(horarios.salida), TIME(tur.hora_inicio))
+        FROM turno_horario tur
+        WHERE tur.turno_id != horarios.turno_id
+        AND tur.numero_dia =  (
+            CASE 
+                WHEN horarios.numero_dia = 7 AND tur.turno_id = 2 THEN horarios.numero_dia
+                ELSE CASE WHEN horarios.numero_dia + 1 > 7 THEN 1 ELSE horarios.numero_dia + 1 END
+            END
+        )
+        LIMIT 1
+    ) AS horario_maximo,
     ,hora_limite_almuerzo
-  FROM turno_horario
-  where empresa_id = $empresa
-) AS horarios
-WHERE DAYOFWEEK(ingreso) = numero_dia and turno_id=$turno
-HAVING 
-  NOW() BETWEEN horario_minimo AND horario_maximo";
+
+    FROM (
+        SELECT
+            id,
+            numero_dia,
+            turno_id,
+            considerar_almuerzo_min,
+            TIMESTAMP(CURDATE(), TIME(hora_inicio)) AS ingreso,
+            TIMESTAMP(
+            DATE_ADD(CURDATE(), INTERVAL DATEDIFF(hora_fin, hora_inicio) DAY),
+            TIME(hora_fin)
+            ) AS salida
+            ,hora_limite_almuerzo
+        FROM turno_horario
+    ) AS horarios
+    WHERE 
+        DAYOFWEEK(ingreso) = numero_dia and turno_id=$turno
+    HAVING 
+    NOW() BETWEEN horario_minimo AND horario_maximo";
+
 
 sc_lookup(rs_data_sybase, $sql);
 
@@ -165,24 +173,21 @@ if (isset({rs_data_sybase}[0][0])) {
     $inset['dia_de_la_semana'] = intval($data[7]);
     $inset['horario_minimo'] = "'$data[8]'";
     $inset['horario_maximo'] = "'$data[9]'";
-    $inset['hora_limite_refrigerio'] = "'$data[10]'";
+	$inset['hora_limite_refrigerio'] = "'$data[10]'";
     $inset['refrigerio_aplicado'] = 0;
-
+	
     $tiempo_trascurrido = intval($data[6] ?? 0);
     $fecha_actual = strtotime($data[9]);
     $horario_ingreso = strtotime($data[4]);
     $horario_salida = strtotime($data[5]);
     $horario_minimo = strtotime($data[8]);
     $horario_maximo = strtotime($data[9]);
-    $msn = "Usuario ingresado correctamente.";
-    $insert['fecha'] = date("Y-m-d H:i:s", $horario_ingreso);
-
-    $hora_limite_refrigerio = $data[10] ?? '';
+	
+	$hora_limite_refrigerio = $data[10] ?? '';
     $hora_limite_refrigerio = isset($data[10]) && $data[10] !== '' ? strtotime($data[10]) : null;
 
     $refrigerio_aplicado = $inset['refrigerio_aplicado'];
-
-    //print_r(" Despues hora_limite_refrigerio=>$hora_limite_refrigerio refrigerio_aplicado=>$refrigerio_aplicado");
+	$insert['fecha'] = date("Y-m-d H:i:s", $horario_ingreso);
     
     $id = guardar_ingreso_horario($inset);
 
@@ -201,8 +206,9 @@ if (isset({rs_data_sybase}[0][0])) {
         $rta['titulo'] = "¿Tiene Permiso?";
         $rta['descripcion'] = "!Estas ingresando tarde¡ Turno: ".date('h:i A', $horario_ingreso)." - ".date('h:i A', $horario_salida);
     }
-
-    $_SESSION["ingreso_id"] = $id;
+	
+    $msn = "Usuario ingresado correctamente.";
+	$_SESSION["ingreso_id"] = $id;
     $_SESSION["hora_limite_refrigerio"] = $hora_limite_refrigerio;    
     $_SESSION["refrigerio_aplicado"] = $refrigerio_aplicado;
 }

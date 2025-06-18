@@ -66,10 +66,34 @@ $eficiencia = $efi['eficiencia'] ?? 0;
 $rta['eficiencia'] = $eficiencia;
 $rta['cantidad'] = intval($efi['cantidad'] ?? 0);
 
+$hactual = time();
+$hrefri = $_SESSION['hora_limite_refrigerio'] ?? NULL;
+$refrigerio = $_SESSION["refrigerio_aplicado"];
+print_r("hactual: $hactual hrefri:$hrefri refrigerio:$refrigerio");
+$update = [];
+if ($hrefri > $hactual && !$refrigerio) {
+    $update['refrigerio_aplicado'] = 2;
+
+    $_SESSION['refrigerio_aplicado'] = $update['refrigerio_aplicado'];
+    saveTable("permiso",[
+        'codigo'            => $usuario,
+        'fecha_permiso'     => "now()",
+        'ingreso_id'        => $idingreso,
+        'con_permiso'       => 2,
+        'tipo'              => 2,
+        'tipo_permiso'      => 5,
+        'usuario_creacion'  => "SISTEMA"
+    ] , $conn);   
+}
+
 DB::closeConnection();
 
 if ($insertedId !== null) {
-	$sql = "UPDATE ingreso SET fecha_modificacion = NOW(), eficiencia=$eficiencia WHERE id= $idingreso";
+    $update['fecha_modificacion'] = "NOW()";
+    $update['eficiencia'] = $eficiencia;
+    
+    $sql = formarSqlUpdate("ingreso", $update, "id=$idingreso");
+
     sc_exec_sql($sql);
     responder(200, 'Ciclo insertado correctamente.', $rta);
 } else {

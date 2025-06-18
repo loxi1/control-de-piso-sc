@@ -46,43 +46,41 @@ if (empty($id)) {
 
 $vafs = "now()";
 
+// ✅ Iniciar conexión
+$conn = DB::getConnection();
+
+// 🔎 Buscar permiso (Refrigerio y permiso con retorno) para actualizar el estado y fecha de ingreso [Util]
+$permiso = listarTablaSimple("permiso", ['ingreso_id' => $id, 'tipo' => 'Permiso'], $conn);
+
+$idPermiso = intval($permiso[0]['id'] ?? 0);
+if($idPermiso) {
+    $fechaCreacion = $permiso[0]['fecha_creacion'] ?? null;
+    $fechaPermiso = "now()";
+    if($permiso[0]['tipo_permiso'] == 'Refrigerio' && !empty($fechaCreacion)) {    
+        // 🔎 Buscar ingreso obtener turno y dia de la semana [Util]
+        $ingreso = listarTablaSimple("ingreso", ['id' => $id], $conn);
+        $turno = intval($ingreso[0]['turno_id'] ?? 0);
+        $dia = intval($ingreso[0]['dia_de_la_semana'] ?? 0);
+        if ( $turno && $dia ) {
+            // 🔎 Buscar la cantidad de minutos que dura su refrigerio [Util]
+            $turnoAll = listarTablaSimple("turno_horario", ['numero_dia'=>$dia, 'turno_id'=>$turno], $conn);
+            $totalMinutos = intval($turnoAll[0]['considerar_almuerzo_min'] ?? 0);
+            if($totalMinutos) {
+                $datetime = new DateTime($fechaCreacion);
+                $datetime->add(new DateInterval('PT' . $totalMinutos . 'M'));
+                $fechaPermiso = $datetime->format('Y-m-d H:i:s');
+            }
+        }
+    }
+    updateTable("permiso", ["fecha_permiso"=>$fechaPermiso,"estado"=>2,"fecha_modificacion"=>"now()"], ["id"=>$idPermiso], $conn);
+}
+
 if($tipo == 1) {
     // Si es ingreso, no se requiere fecha_permiso
     if(!empty($fecha_permiso)) {
         $vafs = $fecha_permiso;
     }
-	
-	// ✅ Iniciar conexión
-    $conn = DB::getConnection();
 
-    // 🔎 Buscar permiso (Refrigerio y permiso con retorno) para actualizar el estado y fecha de ingreso [Util]
-    $permiso = listarTablaSimple("permiso", ['ingreso_id' => $id, 'tipo' => 'Permiso'], $conn);
-	
-    $idPermiso = intval($permiso[0]['id'] ?? 0);
-    if($idPermiso) {
-        $fechaCreacion = $permiso[0]['fecha_creacion'] ?? null;
-        $fechaPermiso = "now()";
-        if($permiso[0]['tipo_permiso'] == 'Refrigerio' && !empty($fechaCreacion)) {    
-			// 🔎 Buscar ingreso obtener turno y dia de la semana [Util]
-            $ingreso = listarTablaSimple("ingreso", ['id' => $id], $conn);
-            $turno = intval($ingreso[0]['turno_id'] ?? 0);
-            $dia = intval($ingreso[0]['dia_de_la_semana'] ?? 0);
-            if ( $turno && $dia ) {
-				// 🔎 Buscar la cantidad de minutos que dura su refrigerio [Util]
-                $turnoAll = listarTablaSimple("turno_horario", ['numero_dia'=>$dia, 'turno_id'=>$turno], $conn);
-                $totalMinutos = intval($turnoAll[0]['considerar_almuerzo_min'] ?? 0);
-				if($totalMinutos) {
-					$datetime = new DateTime($fechaCreacion);
-					$datetime->add(new DateInterval('PT' . $totalMinutos . 'M'));
-					$fechaPermiso = $datetime->format('Y-m-d H:i:s');
-				}
-            }
-        }
-		
-        updateTable("permiso", ["fecha_permiso"=>$fechaPermiso,"estado"=>2,"fecha_modificacion"=>"now()"], ["id"=>$idPermiso], $conn);
-    }
-
-    DB::closeConnection();
     //Validar si ya existe un permiso para esa fecha con el ingreso_id y para el mismo operario
     $sqlexiste = "select id from permiso where codigo='$codigo' and ingreso_id=$id and tipo=$tipo";
     sc_lookup(rs_existe, $sqlexiste);
@@ -93,7 +91,6 @@ if($tipo == 1) {
         responder(200, 'Ya existe un permiso para esa fecha y operario.',['permiso' => {rs_existe}[0][0]]);
     }
 }
-
 //ID permiso
 $insertedId = guardar_permiso(formarSqlInsert("permiso", [
 	"codigo" => $codigo,
@@ -101,8 +98,11 @@ $insertedId = guardar_permiso(formarSqlInsert("permiso", [
 	"ingreso_id" => $id,
 	"con_permiso" => $con_permiso,
 	"tipo" => $tipo,
+    "usuario_creacion" => $codigo,
 	"tipo_permiso" => $tipo_permiso
 ]));
+
+DB::closeConnection();
 
 if ($insertedId !== null) {
     responder(200, 'Ingreso permiso correctamente.', ['permiso' => $insertedId]);

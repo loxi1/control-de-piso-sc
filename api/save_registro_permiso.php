@@ -78,18 +78,26 @@ if($tipo == 3 || $tipo_permiso == 5) {
 if ( !$idUpPermiso) {
     // 💾 Insertar nuevo permiso
     $save = [
-        'codigo'         => $codigo,
-        'fecha_permiso'  => $fecha_permiso,
-        'ingreso_id'     => $id,
-        'con_permiso'    => $con_permiso,
-        'tipo'           => $tipo,
-        'tipo_permiso'   => $tipo_permiso,
-        'estado'         => $estado
+        'codigo'            => $codigo,
+        'fecha_permiso'     => $fecha_permiso,
+        'ingreso_id'        => $id,
+        'con_permiso'       => $con_permiso,
+        'tipo'              => $tipo,
+        'tipo_permiso'      => $tipo_permiso,
+        'usuario_creacion'  => $_SESSION["usr_login"],
+        'estado'            => $estado
     ];
 
     // 💾 Función para guardar permiso
     $insertedId = saveTable("permiso", $save, $conn);
     $insertedId = intval($insertedId ?? 0);
+
+    if ( $tipo_permiso == 5 ) {
+        updateTable("ingreso", [
+            'refrigerio_aplicado' => 2
+        ], ['id' => $id], $conn);
+        $_SESSION["refrigerio_aplicado"] = 1;
+    }
 } else {
     $upPermiso['fecha_modificacion'] = "now()";
     if ($conpermiso == "Si tiene permiso") {

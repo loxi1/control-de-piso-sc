@@ -15,10 +15,6 @@ class DB {
                     PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4",
                     PDO::ATTR_PERSISTENT => true
                 ]);
-
-                // 💡 Asegurar estado limpio por si se reutiliza una conexión
-                self::resetConnectionState();
-
             } catch (PDOException $e) {
                 error_log("Error MySQL: " . $e->getMessage());
                 throw new Exception("No se pudo conectar a la base de datos.");
@@ -28,19 +24,7 @@ class DB {
         return self::$conn;
     }
 
-    private static function resetConnectionState(): void {
-        try {
-            // ✅ Reestablecer opciones que podrían estar sucias por conexiones anteriores
-            self::$conn->exec("ROLLBACK"); // por si quedó una transacción abierta
-            self::$conn->exec("SET autocommit = 1");
-            self::$conn->exec("SET SESSION sql_mode = ''");
-        } catch (PDOException $e) {
-            // No interrumpir flujo, pero registrar
-            error_log("Error al limpiar estado de conexión: " . $e->getMessage());
-        }
-    }
-
     public static function closeConnection(): void {
-        //self::$conn = null; para produccion comentar
+        self::$conn = null;
     }
 }

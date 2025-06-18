@@ -131,7 +131,6 @@ function mostrarTurno(array $param, PDO $conn): ?array
                     id,
                     numero_dia,
                     turno_id,
-                    (select descripcion from turno trun where trun.id=turno_id) as elturno,
                     considerar_almuerzo_min,
                     ingreso AS horario_ingreso,
                     salida AS horario_salida,
@@ -139,20 +138,37 @@ function mostrarTurno(array $param, PDO $conn): ?array
                     DAYOFWEEK(ingreso) AS dia,
                     -- Hora fin del turno anterior (turno diferente, dia anterior)
                     (
-                        SELECT TIMESTAMP(DATE(horarios.ingreso), TIME(tur.hora_fin))
+                        SELECT TIMESTAMP(
+                        DATE(horarios.ingreso), 
+                        TIME(tur.hora_fin)
+                        )
                         FROM turno_horario tur
                         WHERE tur.turno_id != horarios.turno_id
-                        AND tur.numero_dia = horarios.numero_dia
+                        AND tur.numero_dia = (
+                            CASE 
+                                WHEN horarios.numero_dia = 7 AND tur.turno_id = 2 THEN
+                                    CASE WHEN horarios.numero_dia - 1 = 0 THEN 7 ELSE horarios.numero_dia - 1 END
+                                ELSE horarios.numero_dia
+                            END
+                        )
                         LIMIT 1
-                    ) AS horario_minimo,                    
+                    ) AS horario_minimo,
+
                     -- Hora inicio del otro turno del mismo día
                     (
                         SELECT TIMESTAMP(DATE(horarios.salida), TIME(tur.hora_inicio))
                         FROM turno_horario tur
                         WHERE tur.turno_id != horarios.turno_id
-                            AND tur.numero_dia =  CASE WHEN horarios.numero_dia = 7 THEN 7 ELSE horarios.numero_dia - 1 END
+                        AND tur.numero_dia =  (
+                            CASE 
+                                WHEN horarios.numero_dia = 7 AND tur.turno_id = 2 THEN horarios.numero_dia
+                                ELSE CASE WHEN horarios.numero_dia + 1 > 7 THEN 1 ELSE horarios.numero_dia + 1 END
+                            END
+                        )
                         LIMIT 1
                     ) AS horario_maximo
+                    ,hora_limite_almuerzo
+
                 FROM (
                     SELECT
                         id,
@@ -160,11 +176,15 @@ function mostrarTurno(array $param, PDO $conn): ?array
                         turno_id,
                         considerar_almuerzo_min,
                         TIMESTAMP(CURDATE(), TIME(hora_inicio)) AS ingreso,
-                        TIMESTAMP(DATE_ADD(CURDATE(), INTERVAL DATEDIFF(hora_fin, hora_inicio) DAY), TIME(hora_fin)) AS salida
+                        TIMESTAMP(
+                        DATE_ADD(CURDATE(), INTERVAL DATEDIFF(hora_fin, hora_inicio) DAY),
+                        TIME(hora_fin)
+                        ) AS salida
+                        ,hora_limite_almuerzo
                     FROM turno_horario
                 ) AS horarios
-                WHERE $sqlx DAYOFWEEK(ingreso) = numero_dia
-                HAVING now() BETWEEN horario_minimo AND horario_maximo;";
+                WHERE 
+                    $sqlx DAYOFWEEK(ingreso) = numero_dia and HAVING now() BETWEEN horario_minimo AND horario_maximo;";
 
         $stmt = $conn->prepare($sql);
 

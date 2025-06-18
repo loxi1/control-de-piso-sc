@@ -1,4 +1,6 @@
 <?php
+date_default_timezone_set('America/Lima');
+
 function responder(int $code, string $msn, array $data = []): never {
     http_response_code($code);
     echo json_encode([
