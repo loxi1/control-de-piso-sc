@@ -1,6 +1,5 @@
 <?php
 date_default_timezone_set('America/Lima');
-
 function responder(int $code, string $msn, array $data = []): never {
     http_response_code($code);
     echo json_encode([
@@ -276,43 +275,10 @@ function listarTablaSimple(string $tabla, array $param, PDO $conn, array $campos
         }
         
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+	return $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     } catch (Exception $e) {
         error_log("Error ingreso: " . $e->getMessage());
         return null;
     }
-}
-
-/**
- * Devolver un array blindValue
- * array (where)
- */
-function blindValueWhere(array $param): array {
-    $bindings = [];
-    foreach ($param as $columna => $valor) {
-        if (!empty($valor)) {
-            $where[] = "$columna = :$columna";
-            $bindings[$columna] = $valor;
-        }
-    }
-    return $bindings;
-}
-
-function blindValueWhereCondiciones(array $param): array {
-    $condiciones = [];
-    $bindings = [];
-
-    foreach ($param as $columna => $valor) {
-        if (!empty($valor)) {
-            $aliasReal = str_replace('.', '_', $columna); // ej. ing.id → ing_id
-            $condiciones[] = "$columna = :$aliasReal";
-            $bindings[$aliasReal] = $valor;
-        }
-    }
-
-    return [
-        'condiciones' => $condiciones,
-        'bindings' => $bindings
-    ];
 }

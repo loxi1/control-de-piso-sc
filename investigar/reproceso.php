@@ -1,12 +1,5 @@
 <?php
 
-/**
- * Calcula la cantidad de reprocesos para un ingreso específico.
- * @param array $param Array con los parámetros necesarios: ingreso_id, costura_id, etc.
- * @param PDO $conn Conexión a la base de datos.
- * 
- * @return int|null Retorna la cantidad de reprocesos o null en caso de error.
- */
 function getCantReproceso(array $param, PDO $conn): ?int {
     if (!$conn || empty($param)) return 0;
 
@@ -18,14 +11,14 @@ function getCantReproceso(array $param, PDO $conn): ?int {
     if (empty($where)) return 0;
 
     $sql = "SELECT
-                ingreso_id,
-                COUNT(ciclo_id) AS cant
-            FROM ciclo
+                ci.ingreso_id,
+                COUNT(ci.ciclo_id) AS cant
+            FROM ciclo ci
             WHERE " . implode(" AND ", $where) . "
-              AND estado_id = 1
-              AND motivo_id > 0
-              AND motivo_tipo = 50
-            GROUP BY ingreso_id";
+              AND ci.estado_id = 1
+              AND ci.motivo_id > 0
+              AND ci.motivo_tipo = 50
+            GROUP BY ci.ingreso_id";
 
     try {
         $stmt = $conn->prepare($sql);

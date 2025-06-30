@@ -1,5 +1,5 @@
 <?php
-require_once(__DIR__ . '/util.php');
+
 // 🧠 Verificar si un ingreso está activo
 function verificarRegistroIngreso(array $param, PDO $conn): ?array
 {
@@ -32,7 +32,7 @@ function verificarRegistroIngreso(array $param, PDO $conn): ?array
 
         //No existe horario que no cerro(Mostrar horario)
         $code = 0;
-        if (!$info) return ['code' => $code, 'msn' => 'No existe login.', 'data' => NULL];
+        if (!$info) return ['code' => $code, 'msn' => 'No existe login.', 'data' => []];
 
         $id = $info['id'];
         $estado = (int) $info['estado'];
@@ -73,10 +73,10 @@ function verificarRegistroIngreso(array $param, PDO $conn): ?array
 
         if ($estado === 1) {
             $conn->prepare("UPDATE ingreso SET estado = 2, fecha_modificacion = NOW() WHERE id = ?")->execute([$id]);
-            return ['code' => 1, 'msn' => 'Turno cerrado correctamente.', 'data' => NULL];
+            return ['code' => 1, 'msn' => 'Turno cerrado correctamente.', 'data' => []];
         }
 
-        return ['code' => 1, 'msn' => 'Turno ya cerrado.', 'data' => NULL];
+        return ['code' => 1, 'msn' => 'Turno ya cerrado.', 'data' => []];
     } catch (Exception $e) {
         error_log("Error ingreso: " . $e->getMessage());
         return null;
@@ -131,6 +131,7 @@ function mostrarTurno(array $param, PDO $conn): ?array
                     id,
                     numero_dia,
                     turno_id,
+                    (select descripcion from turno trun where trun.id=turno_id) as elturno,
                     considerar_almuerzo_min,
                     ingreso AS horario_ingreso,
                     salida AS horario_salida,
@@ -138,37 +139,20 @@ function mostrarTurno(array $param, PDO $conn): ?array
                     DAYOFWEEK(ingreso) AS dia,
                     -- Hora fin del turno anterior (turno diferente, dia anterior)
                     (
-                        SELECT TIMESTAMP(
-                        DATE(horarios.ingreso), 
-                        TIME(tur.hora_fin)
-                        )
+                        SELECT TIMESTAMP(DATE(horarios.ingreso), TIME(tur.hora_fin))
                         FROM turno_horario tur
                         WHERE tur.turno_id != horarios.turno_id
-                        AND tur.numero_dia = (
-                            CASE 
-                                WHEN horarios.numero_dia = 7 AND tur.turno_id = 2 THEN
-                                    CASE WHEN horarios.numero_dia - 1 = 0 THEN 7 ELSE horarios.numero_dia - 1 END
-                                ELSE horarios.numero_dia
-                            END
-                        )
+                        AND tur.numero_dia = horarios.numero_dia
                         LIMIT 1
-                    ) AS horario_minimo,
-
+                    ) AS horario_minimo,                    
                     -- Hora inicio del otro turno del mismo día
                     (
                         SELECT TIMESTAMP(DATE(horarios.salida), TIME(tur.hora_inicio))
                         FROM turno_horario tur
                         WHERE tur.turno_id != horarios.turno_id
-                        AND tur.numero_dia =  (
-                            CASE 
-                                WHEN horarios.numero_dia = 7 AND tur.turno_id = 2 THEN horarios.numero_dia
-                                ELSE CASE WHEN horarios.numero_dia + 1 > 7 THEN 1 ELSE horarios.numero_dia + 1 END
-                            END
-                        )
+                            AND tur.numero_dia =  CASE WHEN horarios.numero_dia = 7 THEN 7 ELSE horarios.numero_dia - 1 END
                         LIMIT 1
                     ) AS horario_maximo
-                    ,hora_limite_almuerzo
-
                 FROM (
                     SELECT
                         id,
@@ -176,15 +160,11 @@ function mostrarTurno(array $param, PDO $conn): ?array
                         turno_id,
                         considerar_almuerzo_min,
                         TIMESTAMP(CURDATE(), TIME(hora_inicio)) AS ingreso,
-                        TIMESTAMP(
-                        DATE_ADD(CURDATE(), INTERVAL DATEDIFF(hora_fin, hora_inicio) DAY),
-                        TIME(hora_fin)
-                        ) AS salida
-                        ,hora_limite_almuerzo
+                        TIMESTAMP(DATE_ADD(CURDATE(), INTERVAL DATEDIFF(hora_fin, hora_inicio) DAY), TIME(hora_fin)) AS salida
                     FROM turno_horario
                 ) AS horarios
-                WHERE 
-                    $sqlx DAYOFWEEK(ingreso) = numero_dia and HAVING now() BETWEEN horario_minimo AND horario_maximo;";
+                WHERE $sqlx DAYOFWEEK(ingreso) = numero_dia
+                HAVING now() BETWEEN horario_minimo AND horario_maximo;";
 
         $stmt = $conn->prepare($sql);
 
@@ -201,12 +181,6 @@ function mostrarTurno(array $param, PDO $conn): ?array
         error_log("Error ingreso: " . $e->getMessage());
         return null;
     }
-}
-
-//Validar si finalizo su turno
-function validarSiFinalizoTurno(array $param, PDO $conn) {
-    if (!$conn || count($param) < 1) return 0;
-    
 }
 
 //Permite alias como parameteros Mostrar el tiempo para la efieciencia.
@@ -247,7 +221,7 @@ function tiempoXTurnoXColaborador(array $param, PDO $conn): ?int
                     ), 0) AS tiempo
                 FROM ingreso ing
                 WHERE " . implode(" AND ", $where);
-        
+
         $stmt = $conn->prepare($sql);
         foreach ($bindings as $key => $val) {
             $stmt->bindValue(":$key", $val);
@@ -258,46 +232,6 @@ function tiempoXTurnoXColaborador(array $param, PDO $conn): ?int
         return $rta && isset($rta['tiempo']) ? intval($rta['tiempo']) : 0;
     } catch (Exception $e) {
         error_log("Error ingreso: " . $e->getMessage());
-        return null;
-    }
-}
-
-// 🕒 Mostrar detalles del último ingreso
-function mostrarUltimoIngreso(array $whereData, PDO $conn): ?array {
-    if (!$conn || empty($param)) return null;
-
-    $condiciones = $whereData['condiciones'] ?? [];
-    $bindings = $whereData['bindings'] ?? [];
-
-    if (empty($condiciones) || empty($bindings)) return null;
-
-    $sql = "SELECT 
-                ing.id, ing.turno_id, ing.horario_ingreso, ing.horario_salida, now() AS fecha_actual,
-                ing.horario_maximo, TIMESTAMPDIFF(SECOND, ing.horario_ingreso, NOW()) AS tiempo_trascurrido, ing.horario_minimo,
-                ing.estado, ing.hora_limite_refrigerio, ing.refrigerio_aplicado,
-                (SELECT IFNULL(perm.id, 0) 
-                 FROM permiso perm 
-                 WHERE perm.tipo = 'salida' 
-                   AND perm.ingreso_id = ing.id 
-                   AND perm.estado = 2 
-                 LIMIT 1) AS cerro_cession, 
-                minutos_almuerzo
-            FROM ingreso ing
-            WHERE " . implode(" AND ", $condiciones) . "
-            ORDER BY ing.horario_ingreso DESC
-            LIMIT 1";
-
-    try {
-        $stmt = $conn->prepare($sql);
-
-        foreach ($bindings as $alias => $valor) {
-            $stmt->bindValue(":$alias", $valor);
-        }
-
-        $stmt->execute();
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    } catch (Exception $e) {
-        error_log("❌ Error ingreso: " . $e->getMessage());
         return null;
     }
 }

@@ -4,13 +4,27 @@ require_once($_SERVER['DOCUMENT_ROOT'] . '/loader/env_loader.php');
 class DB {
     private static ?PDO $conn = null;
 
+    /**
+     * Obtiene una conexión a la base de datos MySQL.
+     * en base a los parámetros de configuración del entorno.
+     * @param string $db Nombre de la base de datos a conectar (por defecto 'bd_mes').
+     * @return PDO Objeto de conexión a la base de datos.
+     * 
+     * @return PDO
+     */
     public static function getConnection(string $db = 'bd_mes'): PDO {
         if (self::$conn === null) {
             $conf = EnvConfig::getMySQL();
-            $dsn = "mysql:host={$conf['host']};port={$conf['port']};dbname={$db};charset=utf8mb4";
+            //$dsn = "mysql:host={$conf['host']};port={$conf['port']};dbname={$db};charset=utf8mb4";
+            $dsn = "mysql:host={$conf['hostname']};port={$conf['port']};dbname={$db};charset=utf8mb4";
 
             try {
-                self::$conn = new PDO($dsn, $conf['user'], $conf['password'], [
+                /*self::$conn = new PDO($dsn, $conf['user'], $conf['password'], [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4",
+                    PDO::ATTR_PERSISTENT => true
+                ]);*/
+                self::$conn = new PDO($dsn, $conf['usuario'], $conf['pwd'], [
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                     PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4",
                     PDO::ATTR_PERSISTENT => true
@@ -27,7 +41,11 @@ class DB {
 
         return self::$conn;
     }
-
+    
+    /**
+     * Obtiene una conexión a la base de datos MySQL para operaciones de escritura.
+     * @return PDO Objeto de conexión a la base de datos.
+     */
     private static function resetConnectionState(): void {
         try {
             // ✅ Reestablecer opciones que podrían estar sucias por conexiones anteriores

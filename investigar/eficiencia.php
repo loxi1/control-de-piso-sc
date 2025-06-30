@@ -1,11 +1,5 @@
 <?php
-/**
- * Calcula la eficiencia por operacion de costura
- * @param array $param Array con los parámetros necesarios: ingreso_id y tiempo_transcurrido.
- * @param PDO $conn Conexión a la base de datos.
- * 
- * @return array|null Retorna un array con la eficiencia y cantidad de operaciones, o null en caso de error.
- */
+
 function calcularEficienciaOnline(array $param, PDO $conn): ?array {
     $idingreso = $param['id'] ?? null;
     $tiempotranscurrido = $param['tiempo'] ?? null; //Tiempo en Segundos
@@ -45,7 +39,7 @@ function calcularEficienciaOnline(array $param, PDO $conn): ?array {
                 $eficiencia += $valorobtenido;
                 $cantidad += $cant;
             }
-            $eficiencia = $eficiencia >= 0 ? $eficiencia : 0;
+	    $eficiencia = $eficiencia >= 0 ? $eficiencia : 0;
             $eficiencia = ($eficiencia == 0) ? 0 : number_format(($eficiencia*6000/$tiempotranscurrido), 2, '.', '');
         }
         

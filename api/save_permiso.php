@@ -60,16 +60,12 @@ if($idPermiso) {
         // 🔎 Buscar ingreso obtener turno y dia de la semana [Util]
         $ingreso = listarTablaSimple("ingreso", ['id' => $id], $conn);
         $turno = intval($ingreso[0]['turno_id'] ?? 0);
-        $dia = intval($ingreso[0]['dia_de_la_semana'] ?? 0);
-        if ( $turno && $dia ) {
-            // 🔎 Buscar la cantidad de minutos que dura su refrigerio [Util]
-            $turnoAll = listarTablaSimple("turno_horario", ['numero_dia'=>$dia, 'turno_id'=>$turno], $conn);
-            $totalMinutos = intval($turnoAll[0]['considerar_almuerzo_min'] ?? 0);
-            if($totalMinutos) {
-                $datetime = new DateTime($fechaCreacion);
-                $datetime->add(new DateInterval('PT' . $totalMinutos . 'M'));
-                $fechaPermiso = $datetime->format('Y-m-d H:i:s');
-            }
+        $totalMinutos = intval($ingreso[0]['minutos_almuerzo'] ?? 0);
+
+        if($totalMinutos) {
+            $datetime = new DateTime($fechaCreacion);
+            $datetime->add(new DateInterval('PT' . $totalMinutos . 'M'));
+            $fechaPermiso = $datetime->format('Y-m-d H:i:s');
         }
     }
     updateTable("permiso", ["fecha_permiso"=>$fechaPermiso,"estado"=>2,"fecha_modificacion"=>"now()"], ["id"=>$idPermiso], $conn);

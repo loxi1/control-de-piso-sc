@@ -1,0 +1,324 @@
+html,body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+.layout-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100%;
+}
+
+/* Header sections */
+.header-section {
+    width: 100%;
+    padding: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: clamp(0.8rem, 2vw, 0.9rem);
+}
+
+.header-top {
+    background-color: #DFECE4;
+    border-bottom: 1px solid #cde0d5;
+}
+
+.header-bottom {
+    background-color: #E1F5DA;
+    border-bottom: 1px solid #d0e6c8;
+}
+
+/* Main button section */
+.main-button-section {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    
+    margin-top: 3px;
+    /* Agrega espacio arriba del botón */
+    margin-left: 3px;
+    /* Margen izquierdo */
+    margin-right: 3px;
+    /* Margen derecho */
+}
+
+.bg-inicio {
+    background-color: #3BA873;
+}
+
+.bg-finalizar {
+    background-color: #ff9900;
+}
+
+.start-button {
+    width: 100%;
+    height: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: transparent;
+    border: none;
+    color: white;
+    font-size: clamp(3rem, 8vw, 6rem);
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.border-top {
+    border-top: 2px solid #a19685;
+}
+.border-bottom {
+    border-bottom: 2px solid #a19685;
+}
+
+/* Metrics section */
+.metrics-section {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+}
+
+.metric-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 5px;
+}
+
+.metric-title {
+    font-size: clamp(0.8rem, 2vw, 1rem);
+    font-weight: bold;
+    color: #525850;
+    text-align: center;
+    margin-bottom: 5px;
+}
+
+.metric-display {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Timer styling */
+.timer-container {
+    border: 2px solid #a19685;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: clamp(1.2rem, 4vw, 2rem);
+    text-align: center;
+    min-width: 120px;
+}
+
+/* SVG indicators */
+.svg-container {
+    position: relative;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.indicator-svg {
+    width: clamp(70px, 18vw, 100px);
+    height: auto;
+}
+
+.triangle-svg {
+    width: clamp(60px, 12vw, 80px);
+    height: auto;
+}
+
+.indicator-value {
+    font-size: clamp(2.2rem, 2vw, 1rem);
+    font-weight: bold;
+    color: green;
+    text-align: center;
+    border: 2px solid black;
+    border-radius: 10px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.indicator-meta-value {
+    font-size: clamp(1.5rem, 2vw, 1rem);
+    font-weight: bold;
+    color: green;
+    text-align: center;
+    border: 2px solid black;
+    border-radius: 10px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.reprocesos-value {
+    position: absolute;
+    top: 40%;
+    transform: translate(0%, -50%);
+    font-size: clamp(1.6rem, 4vw, 2rem);
+    font-weight: bold;
+    color: red;
+}
+
+.reprocesos-label {
+    position: absolute;
+    top: 85%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: clamp(0.7rem, 1.8vw, 0.9rem);
+    font-weight: bold;
+    color: red;
+}
+
+/* Event buttons grid */
+.event-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    padding: 10px;
+    height: auto;
+}
+
+.event-btn {
+    background-color: #3BA873;
+    color: white;
+    border: 1px solid #626262;
+    border-radius: 8px;
+    padding: 8px 5px;
+    font-size: clamp(0.7rem, 2vw, 0.9rem);
+    font-weight: bold;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    aspect-ratio: 2/1;
+}
+
+/* Footer section */
+.footer-section {
+    display: flex;
+    width: 100%;
+    min-height: 40px;
+}
+
+.footer-item {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 8px;
+    font-size: clamp(0.6rem, 1.5vw, 0.8rem);
+    font-weight: bold;
+}
+
+.footer-light {
+    background-color: #B6D4C5;
+}
+
+.footer-dark {
+    background-color: #3BA873;
+    color: white;
+}
+
+.footer-link {
+    text-decoration: none;
+    color: inherit;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+/* Agrega esto en tu sección de estilos */
+.top-controls-section {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 5px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+
+
+/*BOTONES VOLVER Y SALIR*/
+.control-btn {
+    padding: 5px 15px;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.back-btn {
+    background-color: #6c757d;
+    color: white;
+}
+
+.back-btn:hover {
+    background-color: #5a6268;
+}
+
+.exit-btn {
+    background-color: #dc3545;
+    color: white;
+}
+
+.exit-btn:hover {
+    background-color: #c82333;
+}
+
+/* Ajuste para el header-top para mantener el espacio */
+.header-top {
+    margin-top: 0;
+    /* Elimina cualquier margen superior existente */
+}
+
+/* Mobile optimizations */
+@media (max-width: 576px) {
+    .metrics-section {
+        padding: 3px;
+    }
+
+    .event-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 5px;
+        padding: 5px;
+    }
+
+    .event-btn {
+        padding: 5px 2px;
+        aspect-ratio: 1.5/1;
+        font-size: 1rem;
+        font-weight: 800;
+    }
+
+    .timer-container {
+        padding: 5px 10px;
+        min-width: 90px;
+    }
+
+    .top-controls-section {
+        padding: 3px;
+    }
+
+    .control-btn {
+        padding: 3px 10px;
+        font-size: 1.2rem;
+    }
+
+    .header-top,
+    .header-bottom {
+        font-size: 0.9rem;
+    }
+}

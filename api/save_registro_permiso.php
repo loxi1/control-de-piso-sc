@@ -20,6 +20,7 @@ $param = json_decode($input, true);
 if (json_last_error() !== JSON_ERROR_NONE) {
     responder(400, 'JSON inválido.');
 }
+
 // ✅ Validaciones iniciales
 $id = intval($param['id'] ?? null);
 $con_permiso = intval($param['con_permiso'] ?? 1);  // Cuenta con permiso 1:No 2:Si
@@ -66,16 +67,18 @@ $idUpPermiso = 0;
 //Verificar si existe un tipo(3) Salida o un $tipo_permiso(5) Refrigerio
 if($tipo == 3 || $tipo_permiso == 5) {
     $where['ingreso_id'] = $id;
-    $where['tipo'] = 3;
+    $where['tipo'] = 'Salida';
     if($tipo_permiso == 5) {
-        unset($where['tipo']);
-        $where['tipo_permiso'] = 5;
+        $where['tipo'] = 'Permiso';
+        $where['tipo_permiso'] = 'Refrigerio';
     }
     $existepermiso = listarTablaSimple("permiso", $where, $conn, ['id']);
     $idUpPermiso = intval($existepermiso[0]['id'] ?? 0);
 }
 
-if ( !$idUpPermiso) {
+$updingreso = [];
+
+if ( $idUpPermiso === 0) {
     // 💾 Insertar nuevo permiso
     $save = [
         'codigo'            => $codigo,
@@ -93,39 +96,41 @@ if ( !$idUpPermiso) {
     $insertedId = intval($insertedId ?? 0);
 
     if ( $tipo_permiso == 5 ) {
-        updateTable("ingreso", [
-            'refrigerio_aplicado' => 2
-        ], ['id' => $id], $conn);
-        $_SESSION["refrigerio_aplicado"] = 1;
+        $updingreso['refrigerio_aplicado'] = 1; // Aplicar refrigerio
+        $updingreso['fecha_modificacion'] = "now()";
+        $_SESSION["refrigerio_aplicado"] = 2;
     }
 } else {
     $upPermiso['fecha_modificacion'] = "now()";
-    if ($conpermiso == "Si tiene permiso") {
+    if ($tipo == 3 && $conpermiso == "Si tiene permiso") {
         $upPermiso['fecha_permiso'] = $fecha_permiso;
     }
     $insertedId = updateTable("permiso", $upPermiso, ['id' => $idUpPermiso], $conn) ? $idUpPermiso : 0;
 }
 
-// ⚙️ Si es salida, actualizar eficiencia y reproceso
+// ⚙️ Si es salida, actualizar eficiencia y reprocesojavascript:void(0);
 $paramh = [];
 $paramh['ing.id'] = $id;
 
 if ($tipo === 3) {
     $paramh['salida'] = 1;
+    $updingreso['fecha_modificacion'] = "now()";
+    $updingreso['estado'] = 2; // Salida
 }
 
+//Calcular el tiempo transcurrido en segundos
 $tiempo = tiempoXTurnoXColaborador($paramh, $conn);
 
 if ($tiempo >= 0) {
     $efi = calcularEficienciaOnline(['id' => $id, 'tiempo' => $tiempo], $conn);
-    $eficiencia = $efi['eficiencia'] ?? 0;
+    $updingreso['eficiencia'] = $efi['eficiencia'] ?? 0;
+    $updingreso['cantidad'] = intval($efi['cantidad'] ?? 0);
+    $updingreso['reproceso'] = getCantReproceso(['ingreso_id' => $id], $conn);
+}
 
-    $reproceso = getCantReproceso(['ingreso_id' => $id], $conn);
-
-    updateTable("ingreso", [
-        'eficiencia' => $eficiencia,
-        'reproceso'  => $reproceso
-    ], ['id' => $id], $conn);
+if (count($updingreso) > 0) {
+    // Actualizar ingreso si hay cambios
+    updateTable("ingreso", $updingreso, ['id' => $id], $conn);
 }
 
 DB::closeConnection();

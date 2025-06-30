@@ -95,15 +95,15 @@ document.addEventListener('DOMContentLoaded', () => {
             Swal.fire("¡Ups..!", "Seleccione el problema.", "error");
             return;
         }
-
-        let meca = parseInt(document.getElementById("mecanico").value, 10) || 0
+	
+	let meca = parseInt(document.getElementById("mecanico").value, 10) || 0
         if (meca <= 0) {
             Swal.fire("¡Ups..!", "El mecánico no está asignado.", "error");
             return             
         }
 
         if(!isRunningMecanico) {                
-            Swal.fire("¡Ups..!", "Aún no llego el mecanico.", "error");
+            Swal.fire("¡Ups..!", "Aún no llego el mecánico.", "error");
             return
         }
 
@@ -177,12 +177,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (problemaSeleccionado === null) {
             Swal.fire("¡Ups..!", "Seleccione el problema.", "error");
             return;
-        }
-
-        let meca = parseInt(document.getElementById("mecanico").value, 10) || 0
-        if (meca <= 0) {
-            Swal.fire("¡Ups..!", "El mecánico no está asignado.", "error");
-            return             
         }
 
         if (!isRunningMecanico) {
@@ -304,8 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await metodoGet('get_colaborador', `id=${mecaid}`, false)
         const nombre = (!data || typeof data.mecanico === 'undefined' || data.mecanico === null) ? "(Sin Asignar)" : data.mecanico
         document.querySelector("#nombre_mecanico").textContent = nombre
-        document.getElementById("mecanico").value = mecaid
-
+	document.getElementById("mecanico").value = mecaid
     }
     
     setInterval(getMecanico, 5000)
@@ -358,7 +351,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const select = document.getElementById("problemaid")
         const selectedProblema = parseInt(document.getElementById("problema").value, 10)
 
-        if (data && Array.isArray(data)) {       
+        if (data && Array.isArray(data)) {         
             // Limpiar el select por si ya tiene opciones
             select.innerHTML = ''
 

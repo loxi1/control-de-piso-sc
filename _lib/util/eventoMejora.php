@@ -1,7 +1,10 @@
 <?php
+require_once(__DIR__ . '/conexion.php');
 
-function getEventos(PDO $conn):string {
+function getEventos():string {
     $btns = "<h1 class='text-center'>Crear eventos</h1>";
+    $conf = EnvConfig::getMySQL();
+    $conn = PDOp::mysql($conf['scm']);
 
     if (!$conn) return $btns;
 

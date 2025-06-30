@@ -1,4 +1,10 @@
 <?php
+
+/**
+ * Verifica si existe una sesión activa con 'ingreso_id'.
+ * Si no existe, destruye la sesión y responde con un error 401.
+ */
+
 session_start();
 
 if (!isset($_SESSION['ingreso_id'])) {

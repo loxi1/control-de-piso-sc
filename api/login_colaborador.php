@@ -44,5 +44,6 @@ $rta['empresa_id'] = {rs_data_sybase}[0][2] ?? null;
 
 $_SESSION["usr_login"] = $rta['codigo'];
 $_SESSION["usr_name"] = $rta['datos'];
+$_SESSION["empresa_id"] = $rta['empresa_id'];
 
 responder(200, 'Operario encontrado.', $rta);

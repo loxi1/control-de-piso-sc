@@ -92,8 +92,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             termiarOperacion(estado)
         }
-
-        if (cerrar) {
+        
+       if (cerrar) {
             const rtasalir = await Swal.fire({ // Espera el resultado de la confirmación
                 title: "¿Finalizó su jornada laboral?",
                 text: "Está a punto de cerrar sesión. ¿Desea confirmar que ha terminado por hoy?",
@@ -213,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             // Permiso con refrierio
             let tipo_permiso = 5
-            //Tipo Permiso
+            //Tipo Ingreso
             tipo = 2
             
             // 1: No, 2: Sí
@@ -241,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
             payload.codigo = usuario
             payload.id = idingreso
             const permiso = await saveCiclo('save_registro_permiso', payload)
-            //direccionar('app_Login_costura')
+            direccionar('app_Login_costura')
         }
     })
 
@@ -314,9 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // También puedes llamar una vez al cargar la página si es necesario
     actualizarEficiencia()
-
     document.getElementById("eficienciaxcolaborador").textContent = "0.00%"
-
     async function actualizarEficiencia() {
         const data = await metodoGet('get_eficiencia_x_hora',`idingreso=${idingreso}`, false)
         if (data) {            
